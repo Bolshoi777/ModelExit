@@ -6,9 +6,9 @@
 | Stage | Status | Git commit | Verification | Blockers |
 |---|---|---|---|---|
 | A. Parser, evaluator, decision | DONE | `feat: add labelled workload and deterministic evaluation` | **G1 PASS** (6/6, 0.13 s; 1 fix + 1 rerun) | — |
-| B. Real local LM Studio + UI | CODE WRITTEN (lm_client, runner, app.py, run_cli.py) | pending | G2 NOT RUN — LM Studio server was down on 2026-10-16 | Operator must start LM Studio |
-| C. Frontier + Passport | CODE WRITTEN (frontier, passport, UI tabs) | pending | G3 NOT RUN | — |
-| D. Windows README + video evidence | NOT STARTED | — | G4 NOT RUN | — |
+| B. Real local LM Studio + UI | CODE COMPLETE (lm_client, runner, app.py, run_cli.py); UI full 3-tab build | see Stage C commit | G2 NOT RUN — LM Studio server was down on 2026-10-16 | Operator must start LM Studio + load model |
+| C. Frontier + Passport | DONE | `feat: run local open-weight workload evaluation and export migration passport` | **G3 PASS** (3/3, 0.16 s, first run) | — |
+| D. Windows README + video evidence | IN PROGRESS — README/LICENSE rewritten; G4 pending G2 | — | G4 NOT RUN | Depends on G2 |
 | E. English contest post published | NOT STARTED | — | Public link NOT AVAILABLE | — |
 
 ## Environment (record only actual details)
@@ -33,6 +33,7 @@
 Date/time | Gate | Command | Duration | Outcome | Re-run count | Details
 ---|---|---|---|---|---|---
 2026-10-16 | G1 | `.venv\Scripts\python.exe -m pytest tests/test_core.py -q` | 0.13 s | **PASS** | 1 fix + 1 rerun | 6 tests: JSONL/CSV import validation, correct prediction, critical miss blocks Ready, malformed JSON recorded + critical-malformed blocks Ready, zero-denominator safety. First run 5/6: single malformed non-critical case returns INSUFFICIENT (rule), test expectation fixed and reason text now discloses invalid count.
+2026-10-16 | G3 | `.venv\Scripts\python.exe -m pytest tests/test_passport.py -q` | 0.16 s | **PASS** | 0 (first run) | 3 tests: passport JSON round-trip + measured counts, dataset/model identification + synthetic warning, Markdown export non-blank with decision/model/frontier. Runs use an explicitly test-only simulator client; the app never uses it.
 
 ## Next task
-Stage B gate G2: real LM Studio run of 6 cases (operator starts server, loads model) — then Stage C gate G3 and Stage D README/polish.
+Stage B gate G2: operator starts LM Studio and loads a model; then run 6 real cases via `run_cli.py --cases 6` and the Streamlit UI, inspect failures honestly (no cloud, no mocks) before G4.
