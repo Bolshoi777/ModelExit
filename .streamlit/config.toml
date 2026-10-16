@@ -2,6 +2,10 @@
 [browser]
 gatherUsageStats = false
 
+[server]
+# Loopback-only: the app and any data stay on this machine.
+address = "127.0.0.1"
+
 [theme]
 base = "light"
 primaryColor = "#1d4ed8"

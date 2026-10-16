@@ -80,7 +80,7 @@ def render_connection_section() -> None:
         key="base_url_input",
         help="Default: http://127.0.0.1:1234/v1 (LM Studio → Developer → Start Server).",
     )
-    if col_button.button("Check connection", use_container_width=True):
+    if col_button.button("Check connection", width="stretch"):
         try:
             client = LMStudioClient(base_url)
             models = client.list_models()
@@ -169,7 +169,7 @@ def render_dataset_section() -> None:
                     }
                     for case in dataset.cases
                 ],
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
@@ -302,7 +302,7 @@ def render_failures_tab() -> None:
                 for field in ("category", "priority", "needs_human", "order_id")
             ],
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
 
     st.subheader("Per-case outcomes")
@@ -328,7 +328,7 @@ def render_failures_tab() -> None:
             }
             for o in report.outcomes
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -454,14 +454,14 @@ def render_passport_tab() -> None:
         data=json_text,
         file_name=f"modelexit_passport_{report.run_id}.json",
         mime="application/json",
-        use_container_width=True,
+        width="stretch",
     )
     col_md.download_button(
         "⬇ Download Exit Passport (Markdown)",
         data=markdown_text,
         file_name=f"modelexit_passport_{report.run_id}.md",
         mime="text/markdown",
-        use_container_width=True,
+        width="stretch",
     )
     with st.expander("Preview Markdown passport"):
         st.markdown(markdown_text)
