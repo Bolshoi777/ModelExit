@@ -15,7 +15,7 @@ This is a contest MVP (DEV Hacktoberfest 2026, Week 2: Side Hustle), not product
 
 ## Features (implemented)
 
-- **Dataset import** — bundled synthetic JSONL sample (12 curated cases, including 6 paired edge cases) or your own CSV/JSONL upload with trusted labels; strict validation with line/row numbers; hard caps (24 cases accepted, 12 evaluated by default).
+- **Dataset import** — bundled synthetic JSONL sample (12 curated cases, including 6 paired edge cases; an equivalent CSV is provided in `samples/`) or your own CSV/JSONL upload with trusted labels; strict validation with line/row numbers; hard caps (24 cases accepted, 12 evaluated by default).
 - **Real local inference** — LM Studio via its OpenAI-compatible API (`/v1/models`, `/v1/chat/completions`), loopback-only, temperature 0, one serial request at a time, 25 s timeout per call, **no automatic retries**.
 - **Deterministic scoring** — exact field comparison against gold labels (`category`, `priority`, `needs_human`, `order_id`); malformed JSON is a recorded failure, never a silent pass; every metric reports its denominator; recall shows `N/A` when the gold denominator is zero.
 - **Failure Frontier** — curated counterfactual pairs (negation, urgency, multi-intent, missing order id, instruction injection) with per-pair labels: `regression`, `stable_pass`, `both_fail`, `improvement`.
@@ -117,9 +117,10 @@ They cover dataset validation, correct/incorrect scoring, malformed JSON handlin
 ## Demo
 
 - Video: _TODO — to be recorded and linked before publication._
-- Recorded results with the exact model id, hardware and denominators: see [`RESULTS_LOG.md`](RESULTS_LOG.md).
+- Recorded results with the exact model id, hardware and denominators: see [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
 
 ## License and credits
 
 - License: MIT (see [`LICENSE`](LICENSE)).
 - Built with [Streamlit](https://streamlit.io/), [Pydantic](https://docs.pydantic.dev/), [httpx](https://www.python-httpx.org/); local inference served by [LM Studio](https://lmstudio.ai/). The open-weight model used in any run is chosen and loaded by the operator in LM Studio; model licences belong to their respective authors.
+- Project/process documents (spec, architecture, data contracts, test policy, milestone log, demo script) live in [`docs/`](docs/).

@@ -8,7 +8,7 @@
 | A. Parser, evaluator, decision | DONE | `feat: add labelled workload and deterministic evaluation` | **G1 PASS** (6/6, 0.13 s; 1 fix + 1 rerun) | — |
 | B. Real local LM Studio + UI | CODE COMPLETE (lm_client, runner, app.py, run_cli.py); UI full 3-tab build | see Stage C commit | G2 NOT RUN — LM Studio server was down on 2026-10-16 | Operator must start LM Studio + load model |
 | C. Frontier + Passport | DONE | `feat: run local open-weight workload evaluation and export migration passport` | **G3 PASS** (3/3, 0.16 s, first run) | — |
-| D. Windows README + video evidence | IN PROGRESS — README/LICENSE rewritten; G4 pending G2 | — | G4 NOT RUN | Depends on G2 |
+| D. Windows README + video evidence | IN PROGRESS — README/LICENSE rewritten; docs/ reorg; CSV sample; DEMO_SCRIPT.md; DEV post draft | `docs: reproducible local demo and limitations` | G4 NOT RUN | Depends on G2 |
 | E. English contest post published | NOT STARTED | — | Public link NOT AVAILABLE | — |
 
 ## Environment (record only actual details)

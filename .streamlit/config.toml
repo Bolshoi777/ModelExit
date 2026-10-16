@@ -1,0 +1,7 @@
+# Streamlit configuration for a clean, private local demo.
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#1d4ed8"
