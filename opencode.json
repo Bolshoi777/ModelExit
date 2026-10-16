@@ -1,0 +1,4 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["TEST_POLICY.md"]
+}
