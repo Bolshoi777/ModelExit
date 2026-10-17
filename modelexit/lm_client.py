@@ -146,9 +146,15 @@ class LMStudioClient:
         model_id: str,
         ticket_text: str,
         temperature: float = 0.0,
-        max_tokens: int = 160,
+        max_tokens: int = 900,
     ) -> ChatResult:
-        """One non-streaming chat completion. No retries, one request only."""
+        """One non-streaming chat completion. No retries, one request only.
+
+        ``max_tokens=900`` was measured on 2026-10-18 against
+        ``google/gemma-4-12b-qat``: reasoning models spend most of the budget on
+        a hidden reasoning channel before emitting the final JSON, so 160 tokens
+        left an empty answer. The passport records the value actually used.
+        """
         if not model_id or not model_id.strip():
             raise LMStudioError("config", "No model selected.")
         url = f"{self.base_url}/chat/completions"
@@ -195,19 +201,33 @@ class LMStudioClient:
         choices = data.get("choices") or []
         if not choices:
             raise LMStudioError("empty_response", "Completion contained no choices.")
-        message = choices[0].get("message") or {}
+        choice = choices[0]
+        message = choice.get("message") or {}
         content = message.get("content")
         if isinstance(content, list):  # some servers return content parts
             content = "".join(
                 part.get("text", "") for part in content if isinstance(part, dict)
             )
         if not isinstance(content, str) or not content.strip():
-            raise LMStudioError("empty_response", "Completion message contained no text.")
+            finish_reason = choice.get("finish_reason")
+            reasoning = message.get("reasoning_content") or message.get("reasoning")
+            if isinstance(reasoning, str) and reasoning.strip():
+                raise LMStudioError(
+                    "empty_content_reasoning_only",
+                    f"The model returned only a reasoning channel ({len(reasoning)} chars) "
+                    f"and no final answer (finish_reason={finish_reason!r}). This usually "
+                    "means the output hit max_tokens before the answer; raise max_tokens "
+                    "or use a non-reasoning model.",
+                )
+            raise LMStudioError(
+                "empty_response",
+                f"Completion message contained no text (finish_reason={finish_reason!r}).",
+            )
 
         return ChatResult(
             raw_text=content,
             model_id=str(data.get("model") or model_id),
             latency_ms=latency_ms,
-            finish_reason=choices[0].get("finish_reason"),
+            finish_reason=choice.get("finish_reason"),
             usage=data.get("usage") if isinstance(data.get("usage"), dict) else None,
         )

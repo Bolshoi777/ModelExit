@@ -36,7 +36,7 @@ class RunConfig(BaseModel):
     model_id: str = ""
     max_cases: int = 12
     temperature: float = 0.0
-    max_tokens: int = 160
+    max_tokens: int = 900
     timeout_s: float = 25.0
 
 

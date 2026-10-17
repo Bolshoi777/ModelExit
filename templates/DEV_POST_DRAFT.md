@@ -29,7 +29,7 @@ TODO — public GitHub repository link.
 
 - Local model and exact model ID: TODO (from the recorded run; read from `GET /v1/models`)
 - Hardware: Windows 11, i5-12600KF, 32 GB RAM, RTX 3060 (TODO confirm VRAM)
-- Inference endpoint: LM Studio localhost, OpenAI-compatible `/v1/chat/completions`, temperature 0, max_tokens 160, 25 s timeout, no retries
+- Inference endpoint: LM Studio localhost, OpenAI-compatible `/v1/chat/completions`, temperature 0, max_tokens 900 (the reasoning model spends most of its budget on a hidden reasoning channel before the final JSON — measured during the run), 25 s timeout, no retries
 - Real evaluated example count and origin: TODO — 12 synthetic labelled cases authored for this project (visibly labelled synthetic; not real customers)
 - Core approach: dataset import → quoted ticket → one JSON object → strict parse → deterministic gold-label scoring → curated pair analysis → conditional recommendation → passport export.
 
