@@ -87,6 +87,10 @@ def test_passport_json_roundtrip_and_counts():
     assert reparsed["metrics"]["exact_match"] == {"correct": 1, "total": 3, "rate": 1 / 3}
     assert reparsed["critical_miss_ids"] == ["S03"]
     assert reparsed["decision"]["status"] == run.decision.status
+    # SPEC.md item 4: the raw model output is stored per case and exported.
+    assert len(reparsed["cases"]) == 3
+    assert all(c["raw_response"] for c in reparsed["cases"])
+    assert reparsed["cases"][0]["case_id"] == "S01"
 
 
 def test_passport_identifies_dataset_model_and_warnings():

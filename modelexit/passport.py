@@ -12,6 +12,7 @@ import json
 from typing import Any, Optional
 
 from .contracts import MAX_RAW_RESPONSE_CHARS
+from .evaluator import CaseOutcome
 from .frontier import PairReport, build_frontier
 from .runner import RunRecord
 
@@ -37,6 +38,36 @@ def _rate_block(correct: int, total: int) -> dict[str, Any]:
         "correct": correct,
         "total": total,
         "rate": (correct / total) if total else None,
+    }
+
+
+def _case_record(outcome: CaseOutcome) -> dict[str, Any]:
+    """Per-case audit record, including the truncated raw model output.
+
+    SPEC.md (item 4) requires the raw response to be stored per case; this
+    record makes it part of the exported passport instead of living only in
+    the UI session.
+    """
+    error: Optional[str] = None
+    if outcome.inference_error is not None:
+        error = f"{outcome.inference_error.kind}: {outcome.inference_error.message}"
+    elif outcome.parse_error is not None:
+        error = f"parse_error: {outcome.parse_error}"
+    return {
+        "case_id": outcome.case.id,
+        "pair_id": outcome.case.pair_id,
+        "dimension": outcome.case.dimension,
+        "text": outcome.case.text,
+        "expected": outcome.case.expected.model_dump(),
+        "predicted": outcome.predicted.model_dump() if outcome.predicted is not None else None,
+        "exact_match": outcome.exact_match,
+        "field_correct": dict(outcome.field_correct),
+        "critical": outcome.critical,
+        "critical_miss": outcome.critical_miss,
+        "invalid": outcome.invalid,
+        "error": error,
+        "latency_ms": outcome.latency_ms,
+        "raw_response": outcome.raw_response,
     }
 
 
@@ -115,6 +146,7 @@ def build_passport(run: RunRecord) -> dict[str, Any]:
             "run_elapsed_s": round(run.elapsed_s, 3),
         },
         "frontier": [report.model_dump() for report in frontier],
+        "cases": [_case_record(outcome) for outcome in run.outcomes],
         "critical_miss_ids": list(metrics.critical_miss_ids),
         "decision": {
             "status": run.decision.status,
