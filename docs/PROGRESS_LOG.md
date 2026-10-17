@@ -7,28 +7,28 @@
 |---|---|---|---|---|
 | A. Parser, evaluator, decision | DONE | `feat: add labelled workload and deterministic evaluation` | **G1 PASS** (6/6, 0.13 s; 1 fix + 1 rerun) | — |
 | B. Real local LM Studio + UI | DONE | `fix: classify reasoning-model responses` (max_tokens fix) | **G2 PASS** (initial FAIL → 1 fix → rerun PASS: 6/6 calls, exact 4/6, invalid 0/6, 65.9 s) | — |
-| C. Frontier + Passport | DONE | `feat: run local open-weight workload evaluation and export migration passport` | **G3 PASS** (3/3, 0.16 s, first run) | — |
-| D. Windows README + video evidence | IN PROGRESS — README/LICENSE rewritten; docs/ reorg; CSV sample; DEMO_SCRIPT.md; PUBLISH_STEPS.md; DEV post draft; UI boot verified (no model) | `fix: replace deprecated use_container_width with width API` | G4 NOT RUN | Depends on G2 |
-| E. English contest post published | NOT STARTED | — | Public link NOT AVAILABLE | — |
+| C. Frontier + Passport | DONE | `feat: run local open-weight workload evaluation and export migration passport` + `fix: export per-case raw responses in the passport` | **G3 PASS** (3/3, 0.16 s first run; 3/3, 0.33 s rerun after the raw-export fix) | — |
+| D. Windows README + video evidence | DONE (code frozen); video + public links = operator | `fix: export per-case raw responses in the passport` | **G4 PASS** — one UI journey: 12-case real run `3521c8420411`, JSON + MD passports downloaded through the UI and opened (measured outcome NOT READY; 177.7 s) | Recording/publishing by operator |
+| E. English contest post published | NOT STARTED | — | Public link NOT AVAILABLE | Draft filled from real results in `templates/DEV_POST_DRAFT.md` |
 
 ## Environment (record only actual details)
 - Windows version: Windows 11 Pro; CPU Intel i5-12600KF; RAM 31.9 GB
 - Python: 3.11.6 in `.venv` (streamlit 1.66.0, pydantic 2.14.1, httpx 0.28.1, pytest 9.1.1)
-- LM Studio version: unknown (server not started during Stage A)
-- Model ID and quantization: pending G2 (will be read from `GET /v1/models`)
-- GPU/RAM if operator discloses: NVIDIA GeForce RTX 3060; RAM 31.9 GB (detected, operator may confirm)
-- Repo URL: local repo only; GitHub publication pending
+- LM Studio: server "Running" at http://127.0.0.1:1234 (OpenAI-compatible `/v1`); version not recorded; operator-managed
+- Model ID: `google/gemma-4-12b-qat` read from `GET /v1/models` (2026-10-18); LM Studio label "QAT", 7.15 GB; exact quantization format not captured
+- GPU/RAM: NVIDIA GeForce RTX 3060 (VRAM variant not captured); RAM 31.9 GB
+- Repo URL: local repo only; GitHub publication pending (operator)
 
-## Measured results (no invented figures)
-- Dataset source: synthetic examples (bundled `samples/support_cases.jsonl`, sha256 a6d7b70d57b92d4f…)
-- N cases: 6 (G2 gate run, 2026-10-18; final 12-case evidence at G4)
-- Exact-match: 4/6 (67%)
-- High-priority recall (denominator): 1/1 (100%); needs_human recall 1/1 (100%)
-- Critical miss IDs: none
-- JSON parse errors: 0/6; call errors 0/6
-- Latency (sample/method): average 10,980 ms, max 13,005 ms per call; 65.9 s for 6 calls (wall clock)
-- Failures observed: S05/S06 both predicted needs_human=true where gold is false (pair P03 `both_fail`); all other fields correct
-- Demo evidence link: pending video (G4)
+## Measured results (no invented figures) — reference run `3521c8420411` (UI, 12 cases)
+- Dataset: synthetic bundled `samples/support_cases.jsonl` (sha256 a6d7b70d…f369a); status completed_with_errors; calls succeeded 11/12 (1 timeout S10, no retry; 0 parse errors)
+- Exact-match: 6/12 (50%); fields: category 9/12, priority 11/12, needs_human 8/12, order_id 11/12
+- Recall: high-priority 2/2 (100%); needs_human 2/3 (67%); critical cases passed 2/3 — miss `S10`
+- Decision: NOT READY (critical miss S10) — honest measured outcome, not an app failure
+- Frontier: P01/P02/P04 stable_pass; P03 both_fail (needs_human over-triggered on billing disputes); P05 both_fail (+ timeout); P06 both_fail (category error; injection did not hijack S12's structured output)
+- Latency: total 152,515 ms / avg 12,710 ms / max 21,828 ms; wall run 177.7 s
+- G2 gate run `e95819ad13e7` (6 cases): exact 4/6, invalid 0/6, recall 1/1, 65.9 s — artifacts `docs/evidence/g2_gate_passport.json/.md`
+- Evidence: `docs/evidence/g4_ui_run_passport.json/.md` (downloaded via UI buttons during G4; exported before the `cases[]` raw-export fix)
+- Demo evidence link: video pending (operator)
 
 ## Gate invocation log (append only)
 Date/time | Gate | Command | Duration | Outcome | Re-run count | Details
@@ -39,6 +39,8 @@ Date/time | Gate | Command | Duration | Outcome | Re-run count | Details
 
 2026-10-18 (UTC+3) | G2 (initial) | `run_cli.py --model "google/gemma-4-12b-qat" --cases 6 --out results/g2_run` | 14.1 s | **FAIL** | — | All 3 attempted calls returned HTTP 200 with empty `message.content`; runner stopped after 3 consecutive `empty_response` failures; decision NOT READY (honest, no fake pass). One diagnostic probe showed the model is a reasoning model: 157 reasoning tokens consumed the whole 160-token budget (`finish_reason=length`).
 2026-10-18 (UTC+3) | G2 (rerun, 1 fix) | same command | 65.9 s | **PASS** | 1 (post-fix) | Fix (measured): `max_tokens` 160 → 900 (13.5 s/call probe at 900) + explicit `empty_content_reasoning_only` classification. Rerun: 6/6 genuine LM Studio calls succeeded; exact 4/6 (67%); high-priority recall 1/1; needs_human recall 1/1; invalid responses 0/6; no critical misses; S05/S06 over-triggered needs_human (P03 `both_fail`); decision INSUFFICIENT EVIDENCE (6 < 10 cases) — correct rule behavior. Artifacts: `results/g2_run.json` + `.md`.
+2026-10-18 (UTC+3) | G3 (rerun, 1 fix) | `.venv\Scripts\python.exe -m pytest tests/test_passport.py -q` | 0.33 s | **PASS** | 1 (post-fix) | Found that the Markdown footer claimed raw responses are preserved in the JSON passport while the export omitted them (SPEC.md item 4 requires storing the raw response per case). Fix: added a `cases[]` section with per-case records incl. truncated raw output (≤600 chars) + matching assertions. 3/3 tests pass.
+2026-10-18 (UTC+3) | G4 (release journey, one pass) | Streamlit UI via browser: Check connection → Load bundled sample → Run "12 cases" → Failures tab → Passport tab → download JSON + MD | 177.7 s run + ~2 min interactions | **PASS** (journey) / measured outcome NOT READY | 0 | Real 12-case run `3521c8420411` on `google/gemma-4-12b-qat`: 11/12 calls ok (S10 hit the 25 s cap, no retry), exact 6/12 (50%), critical miss S10 → NOT READY per rule. Frontier: P01/P02/P04 stable_pass; P03/P05/P06 both_fail. Both passports downloaded through the UI buttons, copied to `docs/evidence/`, opened and verified.
 
 ## Next task
-Stage D gate G4: one manual UI journey — launch Streamlit, load bundled sample, 12-case real run, inspect Failures/Frontier, download and open JSON + Markdown passports; then record video and fill DEV post with the 12-case numbers.
+All code/doc work is frozen. Operator-only steps: (1) record the ~2:30 video per `docs/DEMO_SCRIPT.md` against the frozen build (LM Studio running; `streamlit run app.py`); (2) create the public GitHub repo and push (commands in `docs/PUBLISH_STEPS.md`); (3) fill the video + repo links in `templates/DEV_POST_DRAFT.md` and publish on DEV before the deadline.

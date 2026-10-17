@@ -87,7 +87,7 @@ This is an MVP heuristic on a small fixture — not a scientifically calibrated 
 
 ## Exit Passport
 
-Every export includes, with no invented values: run status and id, UTC timestamp, dataset name + SHA-256 + case counts, synthetic-fixture flag, provider and endpoint, requested/reported model id(s), temperature / max_tokens / timeout, calls succeeded vs total, exact-match and per-field accuracy with denominators, gold-high and needs_human recall (or `N/A`), critical-case pass counts and miss ids, latency stats, the evaluated frontier pairs, the decision with reasons, and shipped limitations/warnings.
+Every export includes, with no invented values: run status and id, UTC timestamp, dataset name + SHA-256 + case counts, synthetic-fixture flag, provider and endpoint, requested/reported model id(s), temperature / max_tokens / timeout, calls succeeded vs total, exact-match and per-field accuracy with denominators, gold-high and needs_human recall (or `N/A`), critical-case pass counts and miss ids, latency stats, the evaluated frontier pairs, per-case records including the raw model output (truncated to 600 characters) for audit, the decision with reasons, and shipped limitations/warnings.
 
 ## Tests
 
@@ -117,7 +117,7 @@ They cover dataset validation, correct/incorrect scoring, malformed JSON handlin
 ## Demo
 
 - Video: _TODO — to be recorded and linked before publication._
-- Recorded results with the exact model id, hardware and denominators: see [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
+- Reference run (2026-10-18): `google/gemma-4-12b-qat` via LM Studio on Windows 11 / RTX 3060 → 6/12 exact match, 1 timeout recorded as a failure, decision **NOT READY** (critical miss S10). JSON + Markdown passports: [`docs/evidence/`](docs/evidence/); full numbers and denominators: [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
 
 ## License and credits
 

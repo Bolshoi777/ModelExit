@@ -1,0 +1,296 @@
+{
+  "schema_version": "1.0",
+  "product": "ModelExit",
+  "created_at_utc": "2026-10-17T23:07:54+00:00",
+  "run_id": "e95819ad13e7",
+  "run_status": "completed",
+  "dataset": {
+    "name": "samples/support_cases.jsonl",
+    "sha256": "a6d7b70d57b92d4f2868838af2de0f47684894dcc6919b4dc857a5a48faf369a",
+    "case_count_evaluated": 6,
+    "case_count_requested": 6,
+    "synthetic": true
+  },
+  "inference": {
+    "provider": "LM Studio (localhost, OpenAI-compatible)",
+    "base_url": "http://127.0.0.1:1234/v1",
+    "model_id_requested": "google/gemma-4-12b-qat",
+    "model_ids_reported": [
+      "google/gemma-4-12b-qat"
+    ],
+    "temperature": 0.0,
+    "max_tokens": 900,
+    "timeout_s_per_call": 25.0,
+    "calls_succeeded": 6,
+    "calls_total": 6
+  },
+  "metrics": {
+    "total_cases": 6,
+    "exact_match": {
+      "correct": 4,
+      "total": 6,
+      "rate": 0.6666666666666666
+    },
+    "field_accuracy": {
+      "category": {
+        "correct": 6,
+        "total": 6,
+        "rate": 1.0
+      },
+      "priority": {
+        "correct": 6,
+        "total": 6,
+        "rate": 1.0
+      },
+      "needs_human": {
+        "correct": 4,
+        "total": 6,
+        "rate": 0.6666666666666666
+      },
+      "order_id": {
+        "correct": 6,
+        "total": 6,
+        "rate": 1.0
+      }
+    },
+    "high_priority_recall": {
+      "correct": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "needs_human_recall": {
+      "correct": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "invalid_responses": 0,
+    "inference_errors": 0,
+    "parse_errors": 0,
+    "critical_cases": {
+      "total": 1,
+      "passed": 1,
+      "miss_ids": []
+    },
+    "latency_ms": {
+      "total": 65877,
+      "average": 10979.5,
+      "max": 13005
+    },
+    "run_elapsed_s": 65.881
+  },
+  "frontier": [
+    {
+      "pair_id": "P01",
+      "original": {
+        "case_id": "S01",
+        "dimension": "original",
+        "text": "Please email me the invoice for order #4521.",
+        "expected": {
+          "category": "billing",
+          "priority": "low",
+          "needs_human": false,
+          "order_id": "4521"
+        },
+        "predicted": {
+          "category": "billing",
+          "priority": "low",
+          "needs_human": false,
+          "order_id": "4521"
+        },
+        "exact_match": true,
+        "field_correct": {
+          "category": true,
+          "priority": true,
+          "needs_human": true,
+          "order_id": true
+        },
+        "critical": false,
+        "critical_miss": false,
+        "invalid": false,
+        "error": null,
+        "latency_ms": 12687
+      },
+      "changed": [
+        {
+          "case_id": "S02",
+          "dimension": "negation",
+          "text": "I do not want a refund for order #4521. I only need the invoice.",
+          "expected": {
+            "category": "billing",
+            "priority": "low",
+            "needs_human": false,
+            "order_id": "4521"
+          },
+          "predicted": {
+            "category": "billing",
+            "priority": "low",
+            "needs_human": false,
+            "order_id": "4521"
+          },
+          "exact_match": true,
+          "field_correct": {
+            "category": true,
+            "priority": true,
+            "needs_human": true,
+            "order_id": true
+          },
+          "critical": false,
+          "critical_miss": false,
+          "invalid": false,
+          "error": null,
+          "latency_ms": 13005
+        }
+      ],
+      "label": "stable_pass",
+      "note": "Original and changed case(s) all passed exactly."
+    },
+    {
+      "pair_id": "P02",
+      "original": {
+        "case_id": "S03",
+        "dimension": "original",
+        "text": "Production checkout is completely down for every customer right now.",
+        "expected": {
+          "category": "technical",
+          "priority": "high",
+          "needs_human": true,
+          "order_id": null
+        },
+        "predicted": {
+          "category": "technical",
+          "priority": "high",
+          "needs_human": true,
+          "order_id": null
+        },
+        "exact_match": true,
+        "field_correct": {
+          "category": true,
+          "priority": true,
+          "needs_human": true,
+          "order_id": true
+        },
+        "critical": true,
+        "critical_miss": false,
+        "invalid": false,
+        "error": null,
+        "latency_ms": 9012
+      },
+      "changed": [
+        {
+          "case_id": "S04",
+          "dimension": "urgency_removed",
+          "text": "Checkout was slow for a few seconds yesterday but seems fine now.",
+          "expected": {
+            "category": "technical",
+            "priority": "low",
+            "needs_human": false,
+            "order_id": null
+          },
+          "predicted": {
+            "category": "technical",
+            "priority": "low",
+            "needs_human": false,
+            "order_id": null
+          },
+          "exact_match": true,
+          "field_correct": {
+            "category": true,
+            "priority": true,
+            "needs_human": true,
+            "order_id": true
+          },
+          "critical": false,
+          "critical_miss": false,
+          "invalid": false,
+          "error": null,
+          "latency_ms": 7864
+        }
+      ],
+      "label": "stable_pass",
+      "note": "Original and changed case(s) all passed exactly."
+    },
+    {
+      "pair_id": "P03",
+      "original": {
+        "case_id": "S05",
+        "dimension": "original",
+        "text": "I was charged twice for order #8182; please review the duplicate payment.",
+        "expected": {
+          "category": "billing",
+          "priority": "medium",
+          "needs_human": false,
+          "order_id": "8182"
+        },
+        "predicted": {
+          "category": "billing",
+          "priority": "medium",
+          "needs_human": true,
+          "order_id": "8182"
+        },
+        "exact_match": false,
+        "field_correct": {
+          "category": true,
+          "priority": true,
+          "needs_human": false,
+          "order_id": true
+        },
+        "critical": false,
+        "critical_miss": false,
+        "invalid": false,
+        "error": null,
+        "latency_ms": 12926
+      },
+      "changed": [
+        {
+          "case_id": "S06",
+          "dimension": "no_order_id",
+          "text": "I was charged twice but cannot find the order number.",
+          "expected": {
+            "category": "billing",
+            "priority": "medium",
+            "needs_human": false,
+            "order_id": null
+          },
+          "predicted": {
+            "category": "billing",
+            "priority": "medium",
+            "needs_human": true,
+            "order_id": null
+          },
+          "exact_match": false,
+          "field_correct": {
+            "category": true,
+            "priority": true,
+            "needs_human": false,
+            "order_id": true
+          },
+          "critical": false,
+          "critical_miss": false,
+          "invalid": false,
+          "error": null,
+          "latency_ms": 10383
+        }
+      ],
+      "label": "both_fail",
+      "note": "Neither side matched exactly (not a regression)."
+    }
+  ],
+  "critical_miss_ids": [],
+  "decision": {
+    "status": "INSUFFICIENT EVIDENCE",
+    "reasons": [
+      "Only 6 labelled case(s) evaluated; 10 or more are required for a READY verdict. Exact match so far: 4/6 (67%); no critical misses."
+    ],
+    "rule": "READY FOR LIMITED PILOT requires: at least 10 labelled cases, zero critical-case misses on priority/needs_human (critical = gold priority 'high' or needs_human true), exact-match >= 85%, and zero invalid responses. Any critical miss => NOT READY. Fewer than 10 valid cases => INSUFFICIENT EVIDENCE. This is an MVP heuristic on a small synthetic workload, not a scientifically calibrated safety guarantee."
+  },
+  "limitations": [
+    "Small labelled workload (bundled cases are synthetic fixtures), not proof of production readiness, generalization or market demand.",
+    "The readiness rule is a transparent MVP heuristic on this fixture; it is not a scientifically calibrated safety guarantee.",
+    "Only four extractions are scored (category, priority, needs_human, order_id); tone, policy text and downstream actions are out of scope.",
+    "The Failure Frontier shows curated paired cases that were actually evaluated; it does not claim to discover every possible failure mode.",
+    "Any cloud-cost comparison would be a user-provided estimate, never an invoice or a measured commercial benchmark."
+  ],
+  "warnings": [
+    "Dataset is a bundled synthetic fixture; it is not real customer data."
+  ]
+}
