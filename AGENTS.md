@@ -53,5 +53,5 @@ READ THIS FIRST. Apply these instructions whenever you work in this repository. 
 ## Do not build
 No authentication, subscriptions, billing, SaaS backend, live cloud LLM integrations, LoRA, generalized agent, true automated source-code migration, huge dashboard, complex Docker orchestration, multi-model leaderboards, uncontrolled test-case generation.
 
-## Final agent report format (in Russian)
-`Готово:` features and paths. `Фактически проверено:` exact one-line commands and results. `Не проверено/блокеры:` uncertainties. `Следующий шаг оператора:` max 3 actionable items. `Сроки:` what is left before target internal cutoff. No inflated claims.
+## Final agent report format
+`Done:` features and paths. `Actually verified:` exact one-line commands and results. `Not verified/blockers:` uncertainties. `Operator next steps:` no more than 3 actionable items. `Timing:` what remains before the internal cutoff. No inflated claims.

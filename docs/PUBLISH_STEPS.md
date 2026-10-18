@@ -1,39 +1,41 @@
-# Публикация ModelExit — точные шаги для оператора
+# ModelExit Publication Steps
 
-Выполняется один раз, по порядку. Внутренний дедлайн: **18.10.2026 20:00 UTC+3** (официальный — 19.10.2026 09:59 UTC+3).
+Run these steps once, in order. The internal target was 2026-10-18 20:00 UTC+3; the official deadline was 2026-10-19 09:59 UTC+3.
 
-## 1. GitHub-репозиторий (5 минут)
+## 1. GitHub repository
 
-1. На github.com создайте **новый публичный** репозиторий, например `modelexit`. Не связывайте с PortalGuard.
-2. В PowerShell из папки проекта:
+The ModelExit repository is now public at https://github.com/Bolshoi777/ModelExit.
+
+For future updates from PowerShell:
 
 ```powershell
-git remote add origin https://github.com/<ваш-логин>/modelexit.git
-git push -u origin main
+git add -A
+git commit -m "describe the change"
+git push origin main
 ```
 
-3. Откройте репозиторий в режиме инкогнито — README и инструкции должны быть видны без входа.
+Open the repository in a private browser window and confirm that the README and setup instructions are visible without signing in.
 
-## 2. Реальное демо-видео (30–40 минут)
+## 2. Real demo video
 
-1. Запустите LM Studio с загруженной моделью (запишите точный model id).
-2. Запустите приложение: `.\.venv\Scripts\Activate.ps1`, затем `streamlit run app.py`.
-3. Записывайте по сценарию [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md) (2:30): связь → модель → прогон 12 кейсов → провалы/frontier → рекомендация → экспорт паспорта.
-4. Покажите реальные цифры из `RESULTS_LOG.md`; ничего не выдумывать.
-5. **Если цифры видео-прогона отличаются** от эталонного `3521c8420411` (это нормально: задержки и таймауты плавают) — положите свежие паспорта из Downloads в `docs/evidence/` и скажите агенту: он за ~10 минут обновит `RESULTS_LOG.md`, README и черновик статьи под видео-прогон. Статья и видео должны совпадать.
-6. Загрузите видео на YouTube (достаточно unlisted-ссылки, если она открывается без входа) и вставьте ссылку в README (раздел Demo) и в статью.
+1. Start LM Studio with the target model loaded and record the exact model ID.
+2. Start the app: `.\.venv\Scripts\Activate.ps1`, then `streamlit run app.py`.
+3. Follow [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md): connection → model → 12-case run → failures/frontier → recommendation → passport export.
+4. Show the actual values from the screen. Do not invent results.
+5. If the fresh run differs from the reference run, keep the fresh passport and make the article match it.
+6. Upload the video and add its public link to the README and DEV post.
 
-## 3. DEV-статья (40–60 минут)
+## 3. DEV article
 
-1. Откройте официальный **Submission Template** со страницы челленджа.
-2. Возьмите черновик [`../templates/DEV_POST_DRAFT.md`](../templates/DEV_POST_DRAFT.md) — все метрики уже заполнены из реального прогона; осталось вставить только ссылку на видео и на GitHub.
-3. Обязательные теги: `devchallenge`, `hf26challenge`.
-4. Категорию **Best Use of Gemma** указывайте только если в прогоне реально использовалась Gemma (укажите точный id).
-5. Проверьте чек-лист из `SUBMISSION.md` и опубликуйте **до 18.10.2026 20:00 UTC+3**.
+1. Open the official challenge submission template.
+2. Use [`../templates/DEV_POST_DRAFT.md`](../templates/DEV_POST_DRAFT.md). Replace only the remaining TODO links with the public video and repository links.
+3. Keep the tags `devchallenge` and `hf26challenge`.
+4. Use **Best Use of Gemma** only when the measured run actually used Gemma and the exact model ID is shown.
+5. Check [`SUBMISSION.md`](SUBMISSION.md), then publish before the deadline.
 
-## 4. После публикации
+## 4. After publication
 
-- [ ] Вставьте ссылки на видео и статью в README и `PROGRESS_LOG.md`.
-- [ ] Проверьте все ссылки в инкогнито.
-- [ ] Убедитесь, что в скриншотах/видео нет токенов, e-mail и личных данных.
-- [ ] Убедитесь, что результаты в статье совпадают со скриншотами и логами.
+- Add the video and article links to the README and `PROGRESS_LOG.md`.
+- Open every public link without signing in.
+- Confirm that screenshots and video contain no tokens, emails or private data.
+- Confirm that article numbers match the screenshots, logs and exported passport.

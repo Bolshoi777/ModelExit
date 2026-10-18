@@ -1,6 +1,6 @@
 # Demo video script — ModelExit (target 2:30, one bounded take)
 
-Record in English for the DEV audience (Russian notes for the operator in brackets).
+Record in English for the DEV audience.
 Show the real model, real run, real numbers. Never fake a failure or a pass.
 
 ## Pre-recording checklist (5 minutes)
@@ -19,7 +19,7 @@ Show the real model, real run, real numbers. Never fake a failure or a pass.
 Narration: “Small SaaS teams pay a cloud AI provider per support ticket. Before they move that traffic to a local open-weight model, they need one honest question answered: where will it fail? I built ModelExit — a local migration test bench that answers exactly that, with measured evidence instead of vibes.”
 
 **00:20–00:40 — Show the real local model.**
-[Alt-Tab в LM Studio: видно название загруженной модели и запущенный сервер на порту 1234.]
+[Switch to LM Studio and show the loaded model name and the running server on port 1234.]
 Narration: “Everything runs locally in LM Studio. The model id you see here is the model that will actually power the evaluation. No cloud, no API keys.”
 
 **00:40–01:10 — Run tab.**
@@ -30,12 +30,12 @@ Narration: “Twelve labelled tickets, one serial call at a time, 25-second time
 
 **01:10–01:45 — Failures tab.**
 - Exact match as `x/12` with denominator; invalid responses; critical misses.
-- Open one failing case: gold label vs parsed prediction vs raw response. [Если все прошли — честно скажите об этом и покажите frontier со stable pairs.]
+- Open one failing case: gold label vs parsed prediction vs raw response. If all cases pass, say so honestly and show the frontier with stable pairs.
 - Failure Frontier: show one pair (original vs changed, e.g. urgency removed) and read its real verdict.
 Narration: “The scoring is deterministic Python against gold labels — the model never grades itself. The Failure Frontier shows curated original/edge pairs, so you see *where* the meaning change broke the model, not just an average.”
 
 **01:45–02:10 — Passport tab.**
-- Decision badge + reasons with counts (ориентир эталонного прогона: “exact-match 6/12, critical miss S10, NOT READY”; в живом прогоне называйте цифры с экрана — они могут немного отличаться).
+- Decision badge + reasons with counts. The reference run showed “exact-match 6/12, critical miss S10, NOT READY”; narrate the live values on screen because they may differ.
 - Metadata block: model id(s), dataset SHA-256, timestamp, settings.
 Narration: “The recommendation is a transparent rule: it only says READY FOR LIMITED PILOT with at least ten cases, zero critical misses, at least 85% exact match and zero invalid responses — otherwise it refuses or asks for review.”
 
