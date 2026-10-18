@@ -31,6 +31,14 @@ Evidence artifacts were exported by ModelExit itself and are committed under `do
 - Gold-high recall 1/1; needs_human recall 1/1; invalid 0/6; no critical misses; elapsed 65.9 s
 - Decision: INSUFFICIENT EVIDENCE (6 evaluated < 10 required) — correct rule behavior
 
+## Reproducibility re-run `8fe376dc3951` (CLI, 12 cases, post-fix build, 2026-10-18 ~12:50 UTC+3)
+- Same dataset (SHA-256 `a6d7…f369a`) and model `google/gemma-4-12b-qat`; 11/12 calls succeeded; elapsed 155.2 s
+- Exact 6/12 (50%); category 9/12; priority 11/12; needs_human 8/12; order_id 11/12; gold-high recall 2/2; needs_human recall 2/3
+- Critical miss `S10` again — this time the model spent the whole 900-token budget on its reasoning channel (`empty_content_reasoning_only`, 23.2 s); in the reference run the same case hit the 25 s socket cap. Both are recorded failures, no retry. Outcome: NOT READY.
+- Frontier pattern identical to the reference run: P01/P02/P04 stable_pass; P03/P05/P06 both_fail
+- Latency now includes the failed call's measured time-to-failure: total 155,241 ms ≈ run elapsed 155.2 s; max 23,195 ms (the reference run, earlier build, showed 152,515 ms total against 177.7 s of wall time because the timeout contributed 0 ms)
+- Evidence: `docs/evidence/postfix_cli_run_passport.json` + `.md`
+
 ## Evidence
 - Actual evidence paths: `docs/evidence/g4_ui_run_passport.json` + `.md` (downloaded through the UI download buttons during G4 and opened for verification); `docs/evidence/g2_gate_passport.json` + `.md` (CLI artifacts)
 - Note: the frozen G2/G4 passports were exported before commit "fix: export per-case raw responses in the passport"; their JSON has no `cases[]` section. Later exports include per-case records with truncated raw outputs (≤600 chars).
