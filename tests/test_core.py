@@ -1,7 +1,6 @@
 """G1 — core deterministic gate (import / scoring / malformed output / decision).
 
-Deliberately tiny: simple fixtures, no model, no network. Run once per
-TEST_POLICY.md.
+Deliberately tiny: simple fixtures, no model and no network.
 """
 
 import json

@@ -22,7 +22,7 @@ samples/support_cases.jsonl
 tests/test_core.py
 tests/test_passport.py
 ```
-Use bundled `samples/support_cases.jsonl` from this kit; do not replace it with generated 'perfect' examples. The kit documents are architecture instructions; keep/move them to `docs/` if necessary, but preserve `AGENTS.md` at repo root.
+Use bundled `samples/support_cases.jsonl`; do not replace it with generated “perfect” examples.
 
 ## Runtime data flow
 `UI -> dataset parser -> bound 12 cases -> LM Studio -> strict response parse -> score against gold -> failure frontier & decision -> report (JSON/MD) -> UI downloads`. **Run inference only from an explicit button click; cache/store run results in Streamlit session state so widget rerenders do not repeat the batch.**
@@ -30,7 +30,7 @@ Use bundled `samples/support_cases.jsonl` from this kit; do not replace it with 
 ## LM Studio integration
 - User-configurable base URL default `http://127.0.0.1:1234/v1`; refuse non-loopback URL by default for privacy.
 - Startup check `GET /v1/models` (model list may include downloadable/unloaded models; handle inference failures). User chooses real ID from response; allow manual model override only if user understands local-server model ID.
-- Send `POST /v1/chat/completions`, `temperature: 0` if supported, `max_tokens: 900`, `stream:false`, timeout 25s per case; no automatic retries. (Raised from the original 160 after measuring on 2026-10-18 that the test reasoning model spends most of its budget on a hidden reasoning channel before the final JSON — see `PROGRESS_LOG.md`.) Specify response format as a *request* only where supported; if unsupported, accept plain text and parse JSON conservatively.
+- Send `POST /v1/chat/completions`, `temperature: 0` if supported, `max_tokens: 900`, `stream:false`, timeout 25s per case; no automatic retries. Specify response format as a request only where supported; otherwise accept plain text and parse JSON conservatively.
 - Prompt must constrain output to **one JSON object** of known enums; **never** send expected labels in the model prompt.
 - Prompt injection defense: ticket body is untrusted data, quote/delimit it, forbid obeying instructions within. Restrict to text classification, no tools.
 - Gracefully display `connection refused`, `model unloaded`, timeout, invalid JSON, missing field; count failures.

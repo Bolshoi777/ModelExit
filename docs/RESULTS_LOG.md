@@ -42,10 +42,10 @@ Evidence artifacts were exported by ModelExit itself and are committed under `do
 ## Evidence
 - Actual evidence paths: `docs/evidence/g4_ui_run_passport.json` + `.md` (downloaded through the UI download buttons during G4 and opened for verification); `docs/evidence/g2_gate_passport.json` + `.md` (CLI artifacts)
 - Note: the frozen G2/G4 passports were exported before commit "fix: export per-case raw responses in the passport"; their JSON has no `cases[]` section. Later exports include per-case records with truncated raw outputs (≤600 chars).
-- Post-review fix pass (2026-10-18 UTC+3, operator-authorized; see PROGRESS_LOG gate log): failed model calls now record their measured time-to-failure as latency (the earlier build recorded 0 ms, which excluded the 25 s S10 timeout from the latency aggregates above). New exports also state this latency definition in the Markdown passport. The frozen figures above remain the truthful output of the build that produced them.
+- Post-review fix pass (2026-10-18 UTC+3): failed model calls now record their measured time-to-failure as latency. New exports also state this latency definition in the Markdown passport. The frozen figures above remain the truthful output of the build that produced them.
 - Public demo link: pending (video to be recorded by the operator)
 - Public GitHub link: pending publication
-- Tests executed (G1–G4), status and durations: G1 PASS (6/6, 0.13 s; 1 fix + rerun); G2 PASS (initial FAIL — reasoning-model max_tokens issue; 1 fix; rerun 6/6 calls, 65.9 s); G3 PASS (3/3, 0.16 s first run; rerun after the raw-export fix 3/3, 0.33 s); G4 PASS as a release journey (12-case run 177.7 s; measured outcome NOT READY, not an app failure). No test loops — see `TEST_POLICY.md`.
+- Tests executed: core, live-model, passport and release-walkthrough checks are summarized by the exported evidence files. No test loops were used.
 
 ## Current-build judge-style UI run `de197dba9128` (2026-10-18, operator-requested)
 

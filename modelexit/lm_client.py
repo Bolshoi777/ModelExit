@@ -1,6 +1,6 @@
 """LM Studio client (OpenAI-compatible local API).
 
-Policy (AGENTS.md / ARCHITECTURE.md):
+Policy: local-only inference with explicit limits and no automatic retries.
 - loopback endpoints only by default (privacy); no cloud providers, no keys;
 - one in-flight request, explicit timeout (25 s per call default);
 - ``temperature`` 0 and a single system message asking for ONE JSON object;

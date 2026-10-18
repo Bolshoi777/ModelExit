@@ -32,21 +32,13 @@ ModelExit is a 48-hour contest MVP for DEV Hacktoberfest 2026 Week 2 (Side Hustl
 
 The optional `samples/support_cases_extended.jsonl` fixture and the comparison feature are documented in the main README.
 
-## Testing policy
-
-Read `docs/TEST_POLICY.md` before running checks. Do not run tests after every edit. Use the planned gates and one final smoke walkthrough; do not create repeated retry loops.
-
 ## Navigation
 
-- `AGENTS.md` — repository policy.
 - `docs/SPEC.md` — scope and acceptance criteria.
 - `docs/ARCHITECTURE.md` — module design.
 - `docs/DATA_CONTRACTS.md` — CSV/JSONL and scoring rules.
-- `docs/IMPLEMENTATION_PLAN.md` — timeboxed delivery plan.
-- `docs/TEST_POLICY.md` — test limits.
-- `docs/DEV_CHALLENGE_RULES.md` — confirmed contest rules.
-- `docs/SUBMISSION.md` — article and publication guidance.
-- `docs/OPENCODE_PROMPTS.md` — reusable development prompts.
+- `docs/RESULTS_LOG.md` — measured local-run evidence.
+- `docs/evidence/` — exported JSON and Markdown passports.
 - `samples/` — synthetic fixtures, never real customer data.
 
 ## Official sources
