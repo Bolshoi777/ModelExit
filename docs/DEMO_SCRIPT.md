@@ -10,7 +10,8 @@ Show the real model, real run, real numbers. Never fake a failure or a pass.
 - [ ] App running: `.\.venv\Scripts\Activate.ps1` then `streamlit run app.py`.
 - [ ] Browser window clean (no personal tabs/bookmarks visible), readable zoom, 1920×1080 or 1366×768.
 - [ ] In the app: connection checked, model selected, bundled sample loaded.
-- [ ] `docs/RESULTS_LOG.md` open in another tab (final numbers must match the video).
+- [ ] `docs/RESULTS_LOG.md` open in another tab (reference numbers `3521c8420411`; the video shows a fresh run — narrate what is on screen).
+- [ ] Heavy background apps closed (recording with a GPU encoder can slow local inference slightly; timeouts are recorded honestly either way).
 
 ## Storyboard
 
@@ -34,7 +35,7 @@ Narration: “Twelve labelled tickets, one serial call at a time, 25-second time
 Narration: “The scoring is deterministic Python against gold labels — the model never grades itself. The Failure Frontier shows curated original/edge pairs, so you see *where* the meaning change broke the model, not just an average.”
 
 **01:45–02:10 — Passport tab.**
-- Decision badge + reasons with counts (e.g. “exact-match 10/12, critical misses: none / S03”).
+- Decision badge + reasons with counts (ориентир эталонного прогона: “exact-match 6/12, critical miss S10, NOT READY”; в живом прогоне называйте цифры с экрана — они могут немного отличаться).
 - Metadata block: model id(s), dataset SHA-256, timestamp, settings.
 Narration: “The recommendation is a transparent rule: it only says READY FOR LIMITED PILOT with at least ten cases, zero critical misses, at least 85% exact match and zero invalid responses — otherwise it refuses or asks for review.”
 
@@ -45,6 +46,8 @@ Narration: “Both passports come out of the same run — model, settings, denom
 
 ## Post-recording
 
-- [ ] Verify every number in the video matches `docs/RESULTS_LOG.md` (same run).
+- [ ] The video is a fresh run: numbers may differ slightly from the committed reference run `3521c8420411` (latency/timeouts vary). That is normal — narrate what is on screen.
+- [ ] Put the freshly downloaded passports into `docs/evidence/` (e.g. as `video_run_passport.json/.md`) and tell the agent — it will update `RESULTS_LOG.md`, README and the DEV draft to the video run (≈10 min) so article = video = committed evidence.
+- [ ] Verify every number narrated matches what is visible in the video and in the exported passport.
 - [ ] Upload (YouTube unlisted/public). Put the link into README “Demo” and the DEV post.
 - [ ] Confirm no tokens/emails/private data visible anywhere.
