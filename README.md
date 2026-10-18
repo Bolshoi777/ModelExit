@@ -3,6 +3,8 @@
 > **Know where your app can safely leave paid AI behind.**
 > A local, failure-aware migration-readiness test bench for open-weight models — run on your own Windows machine with LM Studio. **Not a guarantee of model safety or cloud-model equivalence.**
 
+Maintained by [@Bolshoi777](https://github.com/Bolshoi777).
+
 ModelExit answers one narrow question for a small SaaS or indie developer paying a cloud AI provider per support ticket:
 
 **Is *this specific local open-weight model* reliable enough for a limited pilot on *this specific* support-triage workload — and where will human review still be required?**
