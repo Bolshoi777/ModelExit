@@ -54,7 +54,7 @@ Only assign `field_correct=true` for actual valid parsed output. For any inferen
 {
   "schema_version": "1.0", "created_at_utc": "...", "product": "ModelExit",
   "dataset": {"name": "...", "sha256": "...", "case_count": 12, "synthetic": true},
-  "inference": {"provider": "LM Studio localhost", "model_id": "...", "base_url": "127.0.0.1", "temperature": 0, "max_tokens": 160},
+  "inference": {"provider": "LM Studio localhost", "model_id": "...", "base_url": "127.0.0.1", "temperature": 0, "max_tokens": 900},
   "metrics": {...}, "frontier": [...], "critical_miss_ids": [...],
   "decision": {"status": "...", "reasons": [...]},
   "limitations": ["Small synthetic workload; not a proof of production readiness", "Cloud cost values are user-provided estimates, if any"]
