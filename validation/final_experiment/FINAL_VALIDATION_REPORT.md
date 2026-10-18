@@ -97,5 +97,5 @@ The run was one serial 12-call inference with 25-second per-call limits and no a
 
 **GO WITH LIMITATIONS** — the key integration scenario works end-to-end, real Gemma output is
 preserved, Cloud vs Local Comparison is visible and exported, and the local Decision Engine
-remains authoritative. The result is not a production-safety claim. GitHub publication still
-requires the operator's repository and publication steps.
+remains authoritative. The result is not a production-safety claim. The repository is published
+at https://github.com/Bolshoi777/ModelExit.
