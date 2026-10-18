@@ -1,0 +1,95 @@
+{
+  "data": [
+    {
+      "id": "google/gemma-4-12b-qat",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "cyber-ornith-1.5-9b-obliterated-i1",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "abliterated-mimo-v2.6-distill-qwen-9b-mlx",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3.8-27b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen/qwen3.5-9b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.6-12b-iq-ultra-heretic-uncensored-thinking-v2-hightop",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "deephat-v1-7b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwythos-9b-claude-mythos-5-1m",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "bugtraceai-core-ultra-27b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.5-21b-claude-4.6-opus-deckard-heretic-uncensored-thinking-i1",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "gemma-4-e4b-uncensored-hauhaucs-aggressive",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "google/gemma-4-26b-a4b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "qwen3.5-9b-uncensored-hauhaucs-aggressive",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "vulnllm-r-7b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "text-embedding-nomic-embed-text-v1.5",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "openai-gpt-oss-20b-abliterated-uncensored-neo-imatrix",
+      "object": "model",
+      "owned_by": "organization_owner"
+    },
+    {
+      "id": "openai/gpt-oss-20b",
+      "object": "model",
+      "owned_by": "organization_owner"
+    }
+  ],
+  "object": "list"
+}

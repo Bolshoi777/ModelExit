@@ -3,8 +3,8 @@
 Rules (DATA_CONTRACTS.md):
 - JSONL: one JSON object per non-empty line; mandatory fields ``id``, ``text``,
   ``expected``; optional ``pair_id``, ``dimension``, ``source``.
-- CSV: columns ``id``, ``text``, ``category``, ``priority``, ``needs_human``,
-  optional ``order_id``, ``pair_id``, ``dimension``.
+- CSV: columns ``id``, ``text``, ``category``, ``priority``, ``needs_human``;
+  optional ``order_id``, ``pair_id``, ``dimension`` (missing order_id means null).
 - Unique ``id``, non-empty ``text`` (<= 3000 chars), known enums, unambiguous
   booleans. Errors carry line/row numbers.
 - Hard cap: 24 cases accepted for upload; evaluation is bounded separately
@@ -25,6 +25,7 @@ from pydantic import BaseModel, ValidationError
 from .contracts import Expected, SupportCase, parse_bool_strict
 
 MAX_UPLOAD_CASES = 24
+MAX_UPLOAD_BYTES = 256 * 1024
 DEFAULT_EVAL_CASES = 12
 SMALL_EVAL_CASES = 6
 
@@ -79,6 +80,8 @@ def _format_errors(errors: list[str]) -> str:
 
 def load_jsonl_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
     """Parse a JSONL dataset; raise DatasetError with line numbers on problems."""
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise DatasetError(f"{name}: file exceeds the 256 KiB upload limit")
     try:
         text = data.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
@@ -86,10 +89,14 @@ def load_jsonl_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset
 
     cases: list[SupportCase] = []
     errors: list[str] = []
+    record_count = 0
     for lineno, line in enumerate(text.splitlines(), start=1):
         stripped = line.strip()
         if not stripped:
             continue
+        record_count += 1
+        if record_count > MAX_UPLOAD_CASES:
+            raise DatasetError(f"{name}: maximum {MAX_UPLOAD_CASES} cases accepted")
         try:
             payload = json.loads(stripped)
         except json.JSONDecodeError as exc:
@@ -109,7 +116,17 @@ def load_jsonl_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset
 
 
 def load_csv_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
+    """Keep CSV parser errors inside the user-facing dataset error contract."""
+    try:
+        return _load_csv_bytes(data, name, synthetic)
+    except csv.Error as exc:
+        raise DatasetError(f"{name}: invalid CSV ({exc})") from exc
+
+
+def _load_csv_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
     """Parse a CSV dataset; raise DatasetError with row/line numbers on problems."""
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise DatasetError(f"{name}: file exceeds the 256 KiB upload limit")
     try:
         text = data.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
@@ -119,7 +136,11 @@ def load_csv_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
     if not reader.fieldnames:
         raise DatasetError(f"{name}: empty CSV file")
 
-    columns = {field.strip().lower(): field for field in reader.fieldnames if field}
+    if any(not isinstance(field, str) or not field.strip() for field in reader.fieldnames):
+        raise DatasetError(f"{name}: CSV headers must be non-empty")
+    columns = {field.strip().lower(): field for field in reader.fieldnames}
+    if len(columns) != len(reader.fieldnames):
+        raise DatasetError(f"{name}: CSV headers must be non-empty and unique (case-insensitive)")
     required = ("id", "text", "category", "priority", "needs_human")
     missing = [column for column in required if column not in columns]
     if missing:
@@ -132,6 +153,8 @@ def load_csv_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
     cases: list[SupportCase] = []
     errors: list[str] = []
     for row_index, row in enumerate(reader, start=1):
+        if row_index > MAX_UPLOAD_CASES:
+            raise DatasetError(f"{name}: maximum {MAX_UPLOAD_CASES} cases accepted")
         line_number = row_index + 1  # header occupies line 1
         try:
             expected = Expected(
@@ -163,6 +186,8 @@ def load_csv_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
 
 def load_dataset_bytes(data: bytes, name: str, synthetic: bool = False) -> Dataset:
     """Load a dataset, choosing the parser by file name / first byte."""
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise DatasetError(f"{name}: file exceeds the 256 KiB upload limit")
     lowered = name.lower()
     if lowered.endswith(".jsonl") or lowered.endswith(".ndjson"):
         return load_jsonl_bytes(data, name, synthetic=synthetic)

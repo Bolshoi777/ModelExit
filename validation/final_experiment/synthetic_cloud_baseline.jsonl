@@ -1,0 +1,12 @@
+{"id":"V01","response":{"category":"billing","priority":"low","needs_human":false,"order_id":"501"},"latency_ms":820,"source":"synthetic_cloud_baseline"}
+{"id":"V02","response":{"category":"billing","priority":"low","needs_human":false,"order_id":"502"},"latency_ms":910,"source":"synthetic_cloud_baseline"}
+{"id":"V03","response":{"category":"technical","priority":"high","needs_human":true,"order_id":null},"latency_ms":1040,"source":"synthetic_cloud_baseline"}
+{"id":"V04","response":{"category":"other","priority":"medium","needs_human":false,"order_id":null},"latency_ms":760,"source":"synthetic_cloud_baseline"}
+{"id":"V05","response":{"category":"account","priority":"low","needs_human":false,"order_id":null},"latency_ms":680,"source":"synthetic_cloud_baseline"}
+{"id":"V06","response":{"category":"account","priority":"high","needs_human":true,"order_id":null},"latency_ms":1110,"source":"synthetic_cloud_baseline"}
+{"id":"V07","response":"not valid JSON","latency_ms":null,"source":"synthetic_cloud_baseline"}
+{"id":"V08","response":{"category":"billing","priority":"medium","needs_human":false,"order_id":"503"},"latency_ms":1320,"source":"synthetic_cloud_baseline"}
+{"id":"V09","response":{"category":"billing","priority":"low","needs_human":false,"order_id":"504"},"latency_ms":790,"source":"synthetic_cloud_baseline"}
+{"id":"V10","response":{"category":"billing","priority":"medium","needs_human":false,"order_id":null},"latency_ms":870,"source":"synthetic_cloud_baseline"}
+{"id":"V11","response":{"category":"other","priority":"low","needs_human":false,"order_id":null},"latency_ms":650,"source":"synthetic_cloud_baseline"}
+{"id":"V12","response":{"category":"billing","priority":"low","needs_human":false,"order_id":null},"latency_ms":950,"source":"synthetic_cloud_baseline"}

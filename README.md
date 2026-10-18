@@ -11,6 +11,10 @@ Instead of a generic benchmark score, it runs a bounded set of your labelled tic
 
 This is a contest MVP (DEV Hacktoberfest 2026, Week 2: Side Hustle), not production SaaS.
 
+<p align="center">
+  <img src="ModelExit.png" alt="How ModelExit works" width="1200">
+</p>
+
 ---
 
 ## Features (implemented)
@@ -22,6 +26,11 @@ This is a contest MVP (DEV Hacktoberfest 2026, Week 2: Side Hustle), not product
 - **Transparent readiness rule** — `READY FOR LIMITED PILOT` only with ≥ 10 evaluated cases, zero critical-case misses (critical = gold `priority=high` or `needs_human=true`), exact-match ≥ 85% and zero invalid responses; any critical miss returns `NOT READY`. The rule text ships inside every export.
 - **Exit Passport** — downloadable JSON + Markdown containing run status, dataset name + SHA-256, actual model id(s), settings, timestamp, measured counts, per-case failures and limitations.
 - **Headless CLI** (`run_cli.py`) — same core as the UI for reproducible logs.
+
+An optional second synthetic fixture is included at `samples/support_cases_extended.jsonl`.
+It contains 12 additional labelled cases covering sensitive account changes, fraud urgency,
+scope changes and prompt-injection text. It is for deeper local checks only; it is not real
+customer data and is not part of the recorded contest result.
 
 ## Requirements
 
@@ -60,6 +69,33 @@ Every run is bounded: ≤ 12 model calls, ≤ 25 s per call, serial, zero retrie
 ```
 
 `--out` writes `results/run1.json` and `results/run1.md` — the same Exit Passport the UI produces. Uploaded datasets can be declared synthetic with `--synthetic`; the bundled sample is always labelled synthetic.
+
+To try the extended fixture from PowerShell, use the exact model id returned by `--list-models`:
+
+```powershell
+.\.venv\Scripts\python.exe run_cli.py --model "<exact id>" --dataset samples/support_cases_extended.jsonl --synthetic --cases 12 --out results/extended
+```
+
+This optional run makes fresh measured calls to LM Studio (up to 12, no retries); it is not
+required for the release evidence and should be run only when you want a new local result.
+
+## Optional Cloud vs Local Comparison
+
+After loading a labelled workload, you can upload a saved cloud baseline in the Run tab. The
+baseline is a CSV or JSONL with the same case `id`, a saved `response` (JSON object or raw JSON
+text), and optional `latency_ms`; it is never sent to a provider. ModelExit scores both sides
+against the same gold labels, shows field-level differences and critical misses, and lists cases
+where local was wrong while cloud was right (and the reverse). A comparison section is included
+in the Exit Passport. Mark the upload as a synthetic fixture when the saved responses are
+controlled test data. Example JSONL row:
+
+```json
+{"id":"S01","response":{"category":"billing","priority":"low","needs_human":false,"order_id":"4521"},"latency_ms":820}
+```
+
+Baseline rows are matched by case id and bounded at 24 rows. Missing or extra ids are disclosed.
+The existing local readiness rule remains authoritative: a good cloud baseline cannot turn a
+local critical miss into `READY`.
 
 ## What it evaluates
 
@@ -117,7 +153,7 @@ They cover dataset validation, correct/incorrect scoring, malformed JSON handlin
 ## Demo
 
 - Video: _TODO — to be recorded and linked before publication._
-- Reference run (2026-10-18): `google/gemma-4-12b-qat` via LM Studio on Windows 11 / RTX 3060 → 6/12 exact match, 1 timeout recorded as a failure, decision **NOT READY** (critical miss S10). JSON + Markdown passports: [`docs/evidence/`](docs/evidence/); full numbers and denominators: [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
+- Reference run (2026-10-18): `google/gemma-4-12b-qat` via LM Studio → 6/12 exact match, 1 timeout recorded as a failure, decision **NOT READY** (critical miss S10). JSON + Markdown passports: [`docs/evidence/`](docs/evidence/); full numbers and denominators: [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
 
 ## License and credits
 

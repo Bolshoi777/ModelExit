@@ -12,6 +12,7 @@ import json
 from typing import Any, Optional
 
 from .contracts import MAX_RAW_RESPONSE_CHARS
+from .comparison import ComparisonReport
 from .evaluator import CaseOutcome
 from .frontier import PairReport, build_frontier
 from .runner import RunRecord
@@ -71,7 +72,7 @@ def _case_record(outcome: CaseOutcome) -> dict[str, Any]:
     }
 
 
-def build_passport(run: RunRecord) -> dict[str, Any]:
+def build_passport(run: RunRecord, comparison: Optional[ComparisonReport] = None) -> dict[str, Any]:
     """Assemble the passport dict from a completed RunRecord."""
     metrics = run.metrics
     model_ids = sorted({o.model_id for o in run.outcomes if o.model_id})
@@ -157,6 +158,8 @@ def build_passport(run: RunRecord) -> dict[str, Any]:
         "limitations": list(LIMITATIONS),
         "warnings": warnings,
     }
+    if comparison is not None:
+        passport["cloud_comparison"] = comparison.model_dump()
     return passport
 
 
@@ -169,6 +172,14 @@ def _fmt_pct(block: dict[str, Any]) -> str:
     if rate is None:
         return f"N/A ({block.get('correct', 0)}/{block.get('total', 0)})"
     return f"{rate:.0%} ({block.get('correct', 0)}/{block.get('total', 0)})"
+
+
+def _exact_block(side: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "correct": side["exact_matches"],
+        "total": side["total_cases"],
+        "rate": side["exact_match_rate"],
+    }
 
 
 def _fmt_side(side: Optional[dict[str, Any]]) -> str:
@@ -297,4 +308,43 @@ def passport_to_markdown(passport: dict[str, Any]) -> str:
         f"{MAX_RAW_RESPONSE_CHARS} chars) are preserved in the JSON passport for audit."
     )
     lines.append("")
+    comparison = passport.get("cloud_comparison")
+    if comparison:
+        lines.append("## Cloud vs Local Comparison")
+        lines.append("")
+        lines.append(
+            f"Baseline: `{comparison['baseline_name']}` · matched cases: "
+            f"{comparison['matched_case_count']} / {comparison['baseline_row_count']} · "
+            f"origin: {'synthetic fixture' if comparison['baseline_synthetic'] else 'user-provided saved responses'} · "
+            "saved responses only; no cloud API call was made."
+        )
+        lines.append("")
+        lines.append("| Metric | Local | Cloud baseline |")
+        lines.append("|---|---:|---:|")
+        lines.append(
+            f"| Exact match | {_fmt_pct(_exact_block(comparison['local']))} | "
+            f"{_fmt_pct(_exact_block(comparison['cloud']))} |"
+        )
+        lines.append(
+            f"| Invalid responses | {comparison['local']['invalid_responses']} / {comparison['local']['total_cases']} | "
+            f"{comparison['cloud']['invalid_responses']} / {comparison['cloud']['total_cases']} |"
+        )
+        lines.append(
+            f"| Critical misses | {len(comparison['local']['critical_miss_ids'])} | {len(comparison['cloud']['critical_miss_ids'])} |"
+        )
+        lines.append(
+            f"| Average known latency | {comparison['local']['average_latency_ms'] if comparison['local']['average_latency_ms'] is not None else 'N/A'} ms | "
+            f"{comparison['cloud']['average_latency_ms'] if comparison['cloud']['average_latency_ms'] is not None else 'N/A'} ms |"
+        )
+        lines.append("")
+        lines.append(
+            f"- Local wrong / cloud right: {len(comparison['local_wrong_cloud_right'])}"
+        )
+        lines.append(
+            f"- Cloud wrong / local right: {len(comparison['cloud_wrong_local_right'])}"
+        )
+        lines.append(f"- Both wrong: {len(comparison['both_wrong'])}")
+        for warning in comparison["warnings"]:
+            lines.append(f"- Warning: {warning}")
+        lines.append("")
     return "\n".join(lines)

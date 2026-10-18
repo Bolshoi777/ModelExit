@@ -16,9 +16,10 @@ from __future__ import annotations
 
 import time
 import uuid
+from itertools import islice
 from typing import Callable, Iterable, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .contracts import SupportCase, utc_now_iso
 from .decision import Decision, decide
@@ -35,10 +36,10 @@ class RunConfig(BaseModel):
 
     base_url: str = DEFAULT_BASE_URL
     model_id: str = ""
-    max_cases: int = 12
+    max_cases: int = Field(default=12, ge=1, le=12)
     temperature: float = 0.0
-    max_tokens: int = 900
-    timeout_s: float = 25.0
+    max_tokens: int = Field(default=900, ge=1, le=4096)
+    timeout_s: float = Field(default=25.0, gt=0, le=25, allow_inf_nan=False)
 
 
 class RunRecord(BaseModel):
@@ -82,7 +83,7 @@ def run_evaluation(
     ``client`` can be injected in unit tests; in production it is a real
     LM Studio client. Nothing here retries a failed call.
     """
-    cases = list(cases)
+    cases = list(islice(cases, config.max_cases))
     client = client or LMStudioClient(config.base_url, timeout_s=config.timeout_s)
 
     outcomes: list[CaseOutcome] = []

@@ -11,12 +11,11 @@
 | D. Windows README + video evidence | DONE; post-G4 small fix pass (static review, see gate log); video + public links = operator | `fix: export per-case raw responses in the passport` | **G4 PASS** — one UI journey: 12-case real run `3521c8420411`, JSON + MD passports downloaded through the UI and opened (measured outcome NOT READY; 177.7 s) | Recording/publishing by operator |
 | E. English contest post published | NOT STARTED | — | Public link NOT AVAILABLE | Draft filled from real results in `templates/DEV_POST_DRAFT.md` |
 
-## Environment (record only actual details)
-- Windows version: Windows 11 Pro; CPU Intel i5-12600KF; RAM 31.9 GB
+## Environment (public-safe summary)
+- Windows 10/11-compatible local setup; machine-specific hardware is intentionally omitted from the public repository.
 - Python: 3.11.6 in `.venv` (streamlit 1.66.0, pydantic 2.14.1, httpx 0.28.1, pytest 9.1.1)
 - LM Studio: server "Running" at http://127.0.0.1:1234 (OpenAI-compatible `/v1`); version not recorded; operator-managed
 - Model ID: `google/gemma-4-12b-qat` read from `GET /v1/models` (2026-10-18); LM Studio label "QAT", 7.15 GB; exact quantization format not captured
-- GPU/RAM: NVIDIA GeForce RTX 3060 (VRAM variant not captured); RAM 31.9 GB
 - Repo URL: local repo only; GitHub publication pending (operator)
 
 ## Measured results (no invented figures) — reference run `3521c8420411` (UI, 12 cases)
@@ -52,3 +51,83 @@ Date/time | Gate | Command | Duration | Outcome | Re-run count | Details
 
 ## Next task
 Code and docs complete (incl. the fix pass above). Operator-only steps: (1) record the ~2:30 video per `docs/DEMO_SCRIPT.md` on the current build (LM Studio running; `streamlit run app.py`) — a fresh run may differ slightly from `3521c8420411`, and timeouts now also appear in the latency figures; (2) create the public GitHub repo and push (commands in `docs/PUBLISH_STEPS.md`); (3) fill the video + repo links in `templates/DEV_POST_DRAFT.md` and publish on DEV before the deadline.
+
+## Post-review corrections (2026-10-18, UTC+3)
+
+A focused static review found boundary issues outside the already completed G1–G4 gates. The
+operator authorized one address check without model calls. Fixed: model output now requires all
+four contract fields (including explicit `order_id: null`); `RunConfig` caps cases at 12, tokens at
+4096 and per-call timeout at 25 seconds; LM Studio requests use a wall-clock deadline, disable
+environment proxies and redirects, reject credentials/query/fragment and non-loopback hosts, and
+validate response shapes; upload parsing caps files at 256 KiB and records duplicate/empty CSV
+headers; replacing an upload uses a SHA-256 fingerprint and clears stale reports; an optional
+12-case synthetic fixture was added at `samples/support_cases_extended.jsonl`.
+
+Address check (one authorized run, no network/model calls; the CSV probe was run before the
+compatibility adjustment described below):
+`ADDRESS_CHECK_PASS Expected:missing-order-rejected; Predicted:missing-order-rejected; extended-jsonl:12-cases; csv-missing-order-rejected; url-rejected:example.com; url-rejected:user:pass@127.0.0.1:1234; url-rejected:127.0.0.1:0; timeout-over-25-rejected; runner-over-12-rejected`.
+
+The CSV compatibility path intentionally keeps `order_id` optional and maps an empty or absent
+column to `null`; the model response contract still requires the field explicitly. G1–G4 were not
+rerun, and no additional LM Studio call was made.
+
+## Operator-requested full judge-style run (2026-10-18, UTC+3)
+
+One complete current-build UI journey was executed with LM Studio running: `Check connection` →
+real model list (18 ids) → selected `google/gemma-4-12b-qat` → `Load bundled sample` →
+`Run Local Evaluation` for 12 cases → `Failures` → `Passport` → JSON and Markdown downloads.
+
+Result: run `de197dba9128`, 12/12 cases evaluated, 11/12 calls succeeded, 6/12 exact (50%),
+high-priority recall 2/2 (100%), `needs_human` recall 2/3 (67%), critical cases passed 2/3,
+invalid 1/12, elapsed 146.5 s, decision `NOT READY`. S10 was the single critical miss and was
+classified as `empty_content_reasoning_only` after 23.5 s; no retry occurred. Frontier summary:
+P01/P02/P04 `stable_pass`, P03/P05/P06 `both_fail`.
+
+Passport downloads were opened and parsed. Evidence: `docs/evidence/final_ui_run_passport_de197dba9128.json`
+and `docs/evidence/final_ui_run_passport_de197dba9128.md`; JSON contains 12 per-case records,
+the actual model id, dataset hash, warnings, metrics, frontier and decision.
+
+## Extended fixture + UI polish (2026-10-18, UTC+3)
+
+Added a restrained visual layer in `app.py`: neutral background, consistent spacing, typography,
+metric cards, tabs and status surfaces; removed decorative emoji from the decision/frontier labels.
+No product logic or evaluation rule changed.
+
+The new `samples/support_cases_extended.jsonl` was uploaded through the UI as synthetic data and
+run against the real `google/gemma-4-12b-qat` model. The first run exposed one metadata issue in
+EP03 (both records lacked an `original` dimension), so E06 was corrected to `original` and the
+run was repeated once. Final run: `6afe7d0265ea`, 12/12 evaluated, 11/12 successful calls,
+exact 7/12 (58%), high-priority recall 2/2 (100%), `needs_human` recall 3/4 (75%), critical
+cases 3/4, invalid 1/12, elapsed 185.0 s, decision `NOT READY`. Frontier: EP01 improvement,
+EP02 stable_pass, EP03 both_fail, EP04 improvement, EP05 regression, EP06 stable_pass.
+
+Evidence: `docs/evidence/extended_ui_run_passport_6afe7d0265ea.json` and `.md`. The export has
+12 per-case records, actual model id, corrected dataset hash, warnings and decision.
+
+## Optional Cloud vs Local Comparison (2026-10-18, UTC+3)
+
+Added `modelexit/comparison.py` and optional UI/passport integration. Users can upload saved
+cloud responses as CSV/JSONL (`id`, `response`/`raw_response`, optional `latency_ms`); the file is
+parsed locally and never sent to a provider. The comparison uses the same labelled cases and
+does not alter the local readiness decision. It reports side-by-side exact/field accuracy,
+invalid responses, critical misses, known latency, and directional disagreements.
+
+Address check (one run, four cases, no network/model calls):
+`COMPARISON_ADDRESS_CHECK_PASS {'matched': 4, 'local_wrong_cloud_right': ['C02'], 'cloud_wrong_local_right': ['C01'], 'both_wrong': ['C04'], 'cloud_invalid': 1, 'local_critical_misses': ['C04'], 'cloud_latency_known': 3}`.
+
+UI boot smoke after the change: Streamlit rendered the optional baseline uploader after loading
+the bundled dataset; no server log errors. Full pytest suite was not run.
+
+## Final integration experiment (2026-10-18, UTC+3)
+
+Per operator request, one full current-build UI experiment was completed with a new 12-case
+synthetic workload and a 12-row synthetic saved-response baseline. LM Studio reported 18 models;
+the selected real model was `google/gemma-4-12b-qat`. Run `b2d608e91866`: 12/12 cases,
+11/12 successful calls, exact 7/12, high recall 3/3, needs_human recall 4/4, critical 4/4,
+invalid 1/12 (`V05` reasoning-only response), elapsed 158.5 s, decision `NEEDS REVIEW`.
+
+Comparison matched 12/12 IDs: local 7/12 exact vs synthetic baseline 7/12; local wrong/cloud
+right `V05,V10,V11`; cloud wrong/local right `V04,V07,V08`; baseline critical misses `V07,V08`.
+The baseline was synthetic and made no provider calls. Artifacts are in
+`validation/final_experiment/`; final report status is **GO WITH LIMITATIONS**. No full pytest
+suite or second inference run was performed.

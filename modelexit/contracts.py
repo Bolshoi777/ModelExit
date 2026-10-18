@@ -68,7 +68,7 @@ class Expected(BaseModel):
     category: str
     priority: str
     needs_human: bool
-    order_id: Optional[str] = None
+    order_id: Optional[str]
 
     @field_validator("category")
     @classmethod
@@ -153,7 +153,7 @@ class Predicted(BaseModel):
     category: str
     priority: str
     needs_human: bool
-    order_id: Optional[str] = None
+    order_id: Optional[str]
 
     @field_validator("category")
     @classmethod

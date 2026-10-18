@@ -29,7 +29,7 @@ TODO — public GitHub repository link.
 ## How I Built It
 
 - Local model and exact model ID: `google/gemma-4-12b-qat` (read from `GET /v1/models` before the run; LM Studio label "QAT", 7.15 GB)
-- Hardware: Windows 11, i5-12600KF, 32 GB RAM, RTX 3060 (VRAM variant not captured)
+- Hardware: local Windows setup; machine-specific hardware is omitted from the public draft
 - Inference endpoint: LM Studio localhost, OpenAI-compatible `/v1/chat/completions`, temperature 0, max_tokens 900 (the reasoning model spends most of its budget on a hidden reasoning channel before the final JSON — measured during the run), 25 s timeout, no retries
 - Real evaluated example count and origin: 12 synthetic labelled cases authored for this project (12 of 12 requested in the reference run; 11/12 calls returned valid output — one 25 s timeout is recorded as a failure, not retried). Not real customers.
 - Core approach: dataset import → quoted ticket → one JSON object → strict parse → deterministic gold-label scoring → curated pair analysis → conditional recommendation → passport export.

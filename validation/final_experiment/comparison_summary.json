@@ -1,0 +1,125 @@
+{
+  "run_id": "b2d608e91866",
+  "model_id": "google/gemma-4-12b-qat",
+  "dataset": {
+    "name": "final_cases.jsonl",
+    "sha256": "3aa79b254bb9f530e7ae387c9dccfdf67970d2d26faef5ee52f9963ef9c091f8",
+    "case_count_evaluated": 12,
+    "case_count_requested": 12,
+    "synthetic": true
+  },
+  "local_metrics": {
+    "total_cases": 12,
+    "exact_match": {
+      "correct": 7,
+      "total": 12,
+      "rate": 0.5833333333333334
+    },
+    "field_accuracy": {
+      "category": {
+        "correct": 9,
+        "total": 12,
+        "rate": 0.75
+      },
+      "priority": {
+        "correct": 11,
+        "total": 12,
+        "rate": 0.9166666666666666
+      },
+      "needs_human": {
+        "correct": 9,
+        "total": 12,
+        "rate": 0.75
+      },
+      "order_id": {
+        "correct": 11,
+        "total": 12,
+        "rate": 0.9166666666666666
+      }
+    },
+    "high_priority_recall": {
+      "correct": 3,
+      "total": 3,
+      "rate": 1.0
+    },
+    "needs_human_recall": {
+      "correct": 4,
+      "total": 4,
+      "rate": 1.0
+    },
+    "invalid_responses": 1,
+    "inference_errors": 1,
+    "parse_errors": 0,
+    "critical_cases": {
+      "total": 4,
+      "passed": 4,
+      "miss_ids": []
+    },
+    "latency_ms": {
+      "total": 158502,
+      "average": 13208.5,
+      "max": 24427
+    },
+    "run_elapsed_s": 158.515
+  },
+  "decision": {
+    "status": "NEEDS REVIEW",
+    "reasons": [
+      "1 of 12 responses was missing or malformed (parse errors: 0, call errors: 1); results are incomplete. Exact-match 7/12."
+    ],
+    "rule": "READY FOR LIMITED PILOT requires: at least 10 labelled cases, zero critical-case misses on priority/needs_human (critical = gold priority 'high' or needs_human true), exact-match >= 85%, and zero invalid responses. Any critical miss => NOT READY. Fewer than 10 valid cases => INSUFFICIENT EVIDENCE. This is an MVP heuristic on a small synthetic workload, not a scientifically calibrated safety guarantee."
+  },
+  "baseline": {
+    "name": "synthetic_cloud_baseline.jsonl",
+    "sha256": "53f1883e573772c9a83b1d375fa6f0b750c79a216ce1118717ef5c0ecb1c5aa0",
+    "synthetic": true,
+    "matched": 12,
+    "missing_ids": [],
+    "extra_ids": [],
+    "metrics": {
+      "total_cases": 12,
+      "exact_matches": 7,
+      "exact_match_rate": 0.5833333333333334,
+      "field_correct_counts": {
+        "category": 9,
+        "priority": 10,
+        "needs_human": 10,
+        "order_id": 11
+      },
+      "field_accuracy": {
+        "category": 0.75,
+        "priority": 0.8333333333333334,
+        "needs_human": 0.8333333333333334,
+        "order_id": 0.9166666666666666
+      },
+      "invalid_responses": 1,
+      "critical_case_count": 4,
+      "critical_pass_count": 2,
+      "critical_miss_ids": [
+        "V07",
+        "V08"
+      ],
+      "known_latency_count": 11,
+      "total_latency_ms": 9900,
+      "average_latency_ms": 900.0,
+      "max_latency_ms": 1320
+    }
+  },
+  "comparison": {
+    "exact_match_delta_points": 0.0,
+    "local_wrong_cloud_right": [
+      "V05",
+      "V10",
+      "V11"
+    ],
+    "cloud_wrong_local_right": [
+      "V04",
+      "V07",
+      "V08"
+    ],
+    "both_wrong": [
+      "V02",
+      "V12"
+    ]
+  }
+}

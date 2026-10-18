@@ -1,11 +1,11 @@
 # Verified experiment results (measured; no invented figures)
 
-All numbers below come from real local runs executed on the operator's machine on 2026-10-18 (UTC+3).
+All numbers below come from real local runs executed on a local Windows setup on 2026-10-18 (UTC+3).
 Evidence artifacts were exported by ModelExit itself and are committed under `docs/evidence/`.
 
 ## Measurement conditions
 - Date/time and timezone: 2026-10-18, 02:07–02:18 UTC+3 (UTC timestamps inside the passports: 2026-10-17T23:07:54Z and 2026-10-17T23:14:40Z)
-- OS / CPU / GPU / RAM: Windows 11 Pro; Intel i5-12600KF; NVIDIA GeForce RTX 3060 (VRAM variant not captured); 31.9 GB RAM
+- OS / hardware: Windows-compatible local setup; machine-specific hardware is omitted from this public log.
 - LM Studio version: not recorded (server reachable at http://127.0.0.1:1234/v1; version not captured)
 - Exact local model ID: `google/gemma-4-12b-qat` (read from `GET /v1/models` before the runs; LM Studio label "QAT", 7.15 GB — exact quantization format not captured)
 - Dataset (synthetic): bundled sample `samples/support_cases.jsonl` — 12 synthetic cases / 6 curated pairs; not real customer data
@@ -46,6 +46,30 @@ Evidence artifacts were exported by ModelExit itself and are committed under `do
 - Public demo link: pending (video to be recorded by the operator)
 - Public GitHub link: pending publication
 - Tests executed (G1–G4), status and durations: G1 PASS (6/6, 0.13 s; 1 fix + rerun); G2 PASS (initial FAIL — reasoning-model max_tokens issue; 1 fix; rerun 6/6 calls, 65.9 s); G3 PASS (3/3, 0.16 s first run; rerun after the raw-export fix 3/3, 0.33 s); G4 PASS as a release journey (12-case run 177.7 s; measured outcome NOT READY, not an app failure). No test loops — see `TEST_POLICY.md`.
+
+## Current-build judge-style UI run `de197dba9128` (2026-10-18, operator-requested)
+
+- Full UI path: Check connection → select actual model → load bundled sample → run 12 cases →
+  Failures → Passport → download JSON and Markdown.
+- LM Studio reported 18 models; selected `google/gemma-4-12b-qat`.
+- 12/12 cases evaluated; 11/12 calls succeeded; exact match 6/12 (50%); high-priority recall
+  2/2 (100%); `needs_human` recall 2/3 (67%); critical cases passed 2/3; invalid 1/12;
+  elapsed 146.5 s; decision **NOT READY**.
+- S10 was the critical miss: `empty_content_reasoning_only` after 23.5 s; no retry.
+- Failure Frontier: P01/P02/P04 `stable_pass`; P03/P05/P06 `both_fail`.
+- Passport evidence: `docs/evidence/final_ui_run_passport_de197dba9128.json` and `.md`.
+
+## Extended synthetic fixture run `6afe7d0265ea` (2026-10-18, current UI)
+
+- Dataset: `samples/support_cases_extended.jsonl`, 12 synthetic cases, SHA-256
+  `1e71589007f40c0dbab5e9837b8f6932b1ef194456e12424f26668c301888e28`.
+- Full UI flow: upload → mark synthetic → run 12 cases → Failures → Passport → download JSON/MD.
+- Model: `google/gemma-4-12b-qat`; 11/12 calls succeeded; elapsed 185.0 s.
+- Exact match 7/12 (58%); high-priority recall 2/2 (100%); `needs_human` recall 3/4 (75%);
+  critical cases 3/4; invalid 1/12; decision **NOT READY** because E05 was a critical miss.
+- Failure Frontier: EP01 improvement; EP02 stable_pass; EP03 both_fail; EP04 improvement;
+  EP05 regression; EP06 stable_pass.
+- Evidence: `docs/evidence/extended_ui_run_passport_6afe7d0265ea.json` + `.md`.
 
 ## Honest commercial hypothesis
 - Buyer profile: small SaaS / indie teams paying per-ticket cloud inference who want measured evidence before moving support triage to a local model — **hypothesis only, NOT validated**.

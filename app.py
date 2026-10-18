@@ -20,6 +20,14 @@ from modelexit.dataset import (
     load_bundled_sample,
     load_dataset_bytes,
     bound_cases,
+    sha256_hex,
+)
+from modelexit.comparison import (
+    CloudBaseline,
+    ComparisonError,
+    ComparisonReport,
+    compare_run,
+    load_baseline_bytes,
 )
 from modelexit.frontier import build_frontier, frontier_summary
 from modelexit.lm_client import DEFAULT_BASE_URL, LMStudioClient, LMStudioError
@@ -29,10 +37,10 @@ from modelexit.runner import RunConfig, RunRecord, run_evaluation
 st.set_page_config(page_title="ModelExit", page_icon="🚪", layout="wide")
 
 STATUS_RENDER = {
-    "READY FOR LIMITED PILOT": ("success", "✅"),
-    "NOT READY": ("error", "⛔"),
-    "INSUFFICIENT EVIDENCE": ("warning", "❔"),
-    "NEEDS REVIEW": ("warning", "⚠️"),
+    "READY FOR LIMITED PILOT": ("success", "READY FOR LIMITED PILOT"),
+    "NOT READY": ("error", "NOT READY"),
+    "INSUFFICIENT EVIDENCE": ("warning", "INSUFFICIENT EVIDENCE"),
+    "NEEDS REVIEW": ("warning", "NEEDS REVIEW"),
 }
 
 
@@ -44,6 +52,10 @@ def init_state() -> None:
         "base_url_input": DEFAULT_BASE_URL,
         "dataset": None,
         "uploaded_fingerprint": None,
+        "cloud_baseline": None,
+        "cloud_baseline_fingerprint": None,
+        "cloud_baseline_error": None,
+        "comparison": None,
         "report": None,
     }
     for key, value in defaults.items():
@@ -53,15 +65,46 @@ def init_state() -> None:
 
 def current_model_id() -> str:
     models = st.session_state.get("models")
-    if models:
+    if models and st.session_state.get("models_base_url") == st.session_state.get("base_url_input"):
         return st.session_state.get("model_choice") or models[0]
     return (st.session_state.get("manual_model") or "").strip()
 
 
 def show_decision_badge(status: str) -> None:
-    kind, icon = STATUS_RENDER.get(status, ("info", "ℹ️"))
+    kind, label = STATUS_RENDER.get(status, ("info", status))
     renderer = {"success": st.success, "error": st.error, "warning": st.warning, "info": st.info}[kind]
-    renderer(f"{icon} **{status}**")
+    renderer(f"**{label}**")
+
+
+def apply_styles() -> None:
+    """Small, restrained visual system for a readable local workbench."""
+    st.markdown(
+        """
+        <style>
+        :root { --mx-ink: #172033; --mx-muted: #5c667a; --mx-line: #dfe5ee; --mx-blue: #3157c8; }
+        .stApp { background: #f5f7fb; color: var(--mx-ink); }
+        [data-testid="stHeader"] { background: transparent; }
+        [data-testid="stAppViewContainer"] > .main > div { max-width: 1180px; padding-top: 2.25rem; }
+        h1 { letter-spacing: -0.04em; font-weight: 760; color: var(--mx-ink); margin-bottom: 0.15rem; }
+        h2, h3 { letter-spacing: -0.02em; color: var(--mx-ink); }
+        h2 { margin-top: 1.2rem; }
+        [data-testid="stMarkdownContainer"] p { color: var(--mx-muted); line-height: 1.55; }
+        [data-testid="stMetric"] { background: #ffffff; border: 1px solid var(--mx-line); border-radius: 12px; padding: 0.85rem 1rem; }
+        [data-testid="stMetricLabel"] { color: var(--mx-muted); }
+        [data-testid="stMetricValue"] { color: var(--mx-ink); }
+        [data-testid="stAlert"] { border-radius: 10px; border-width: 1px; }
+        [data-testid="stExpander"] { background: #ffffff; border: 1px solid var(--mx-line); border-radius: 10px; }
+        .stButton > button { border-radius: 8px; border: 1px solid #cfd7e5; font-weight: 600; }
+        .stButton > button[kind="primary"] { background: var(--mx-blue); border-color: var(--mx-blue); }
+        .stTabs [data-baseweb="tab-list"] { gap: 1.5rem; border-bottom: 1px solid var(--mx-line); }
+        .stTabs [data-baseweb="tab"] { color: var(--mx-muted); font-weight: 650; padding-left: 0.1rem; padding-right: 0.1rem; }
+        .stTabs [aria-selected="true"] { color: var(--mx-blue); }
+        .mx-kicker { color: var(--mx-blue); font-size: 0.72rem; font-weight: 750; letter-spacing: 0.14em; margin-bottom: 0.35rem; }
+        .mx-subtitle { color: var(--mx-muted); font-size: 1.02rem; max-width: 800px; margin-bottom: 1.3rem; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # --------------------------------------------------------------------------
@@ -80,6 +123,9 @@ def render_connection_section() -> None:
         key="base_url_input",
         help="Default: http://127.0.0.1:1234/v1 (LM Studio → Developer → Start Server).",
     )
+    if base_url != st.session_state.get("models_base_url"):
+        st.session_state.models = None
+        st.session_state.models_error = None
     if col_button.button("Check connection", width="stretch"):
         try:
             client = LMStudioClient(base_url)
@@ -117,6 +163,12 @@ def _clear_dataset_state() -> None:
     """Switching the case source must not keep a stale loaded dataset."""
     st.session_state.dataset = None
     st.session_state.uploaded_fingerprint = None
+    st.session_state.cloud_baseline = None
+    st.session_state.cloud_baseline_fingerprint = None
+    st.session_state.cloud_baseline_error = None
+    st.session_state.comparison = None
+    st.session_state.report = None
+    st.session_state.dataset_error = None
 
 
 def render_dataset_section() -> None:
@@ -139,20 +191,28 @@ def render_dataset_section() -> None:
             st.session_state.dataset = dataset
             st.session_state.report = None
     else:
-        uploaded = st.file_uploader("Upload CSV or JSONL (max 24 cases)", type=["csv", "jsonl", "ndjson"])
+        uploaded = st.file_uploader("Upload CSV or JSONL (max 24 cases, 256 KiB)", type=["csv", "jsonl", "ndjson"])
+        synthetic = st.checkbox("These uploaded cases are synthetic fixtures", key="upload_synthetic")
+        if uploaded is None:
+            _clear_dataset_state()
         if uploaded is not None:
-            fingerprint = f"{uploaded.name}:{uploaded.size}"
+            data = uploaded.getvalue()
+            fingerprint = (uploaded.name, sha256_hex(data), synthetic)
             if st.session_state.get("uploaded_fingerprint") != fingerprint:
+                st.session_state.report = None
                 try:
-                    data = uploaded.getvalue()
-                    dataset = load_dataset_bytes(data, name=uploaded.name, synthetic=False)
+                    dataset = load_dataset_bytes(data, name=uploaded.name, synthetic=synthetic)
                     st.session_state.dataset = dataset
                     st.session_state.uploaded_fingerprint = fingerprint
                     st.session_state.report = None
                 except DatasetError as exc:
-                    st.error(f"Dataset rejected:\n\n{exc}")
                     st.session_state.dataset = None
                     st.session_state.uploaded_fingerprint = fingerprint
+                    st.session_state.dataset_error = str(exc)
+                else:
+                    st.session_state.dataset_error = None
+            if st.session_state.get("dataset_error"):
+                st.error(f"Dataset rejected:\n\n{st.session_state.dataset_error}")
 
     dataset: Dataset | None = st.session_state.get("dataset")
     if dataset is not None:
@@ -178,6 +238,54 @@ def render_dataset_section() -> None:
                 ],
                 width="stretch",
                 hide_index=True,
+            )
+        st.markdown("**Optional cloud baseline**")
+        st.caption(
+            "Upload saved cloud responses linked by case id. ModelExit compares them locally; "
+            "it never calls a cloud provider."
+        )
+        baseline_upload = st.file_uploader(
+            "Cloud baseline CSV / JSONL (optional)",
+            type=["csv", "jsonl", "ndjson"],
+            key="cloud_baseline_upload",
+        )
+        baseline_synthetic = st.checkbox(
+            "This cloud baseline is a synthetic fixture",
+            key="cloud_baseline_synthetic",
+        )
+        if baseline_upload is not None:
+            baseline_data = baseline_upload.getvalue()
+            baseline_fingerprint = (
+                baseline_upload.name,
+                sha256_hex(baseline_data),
+                baseline_synthetic,
+            )
+            if st.session_state.get("cloud_baseline_fingerprint") != baseline_fingerprint:
+                try:
+                    st.session_state.cloud_baseline = load_baseline_bytes(
+                        baseline_data,
+                        baseline_upload.name,
+                        synthetic=baseline_synthetic,
+                    )
+                    st.session_state.cloud_baseline_error = None
+                    st.session_state.cloud_baseline_fingerprint = baseline_fingerprint
+                    st.session_state.comparison = None
+                    st.session_state.report = None
+                except ComparisonError as exc:
+                    st.session_state.cloud_baseline = None
+                    st.session_state.cloud_baseline_error = str(exc)
+                    st.session_state.cloud_baseline_fingerprint = baseline_fingerprint
+            if st.session_state.get("cloud_baseline_error"):
+                st.error(f"Cloud baseline rejected:\n\n{st.session_state.cloud_baseline_error}")
+        baseline: CloudBaseline | None = st.session_state.get("cloud_baseline")
+        if baseline is not None:
+            dataset_ids = {case.id for case in dataset.cases}
+            matched = sum(1 for row in baseline.rows if row.case_id in dataset_ids)
+            st.caption(
+                f"Baseline loaded: `{baseline.name}` · {len(baseline.rows)} saved responses · "
+                f"{matched} match the current dataset · "
+                f"{'synthetic fixture' if baseline.synthetic else 'user-provided saved responses'} · "
+                f"SHA-256 `{baseline.sha256[:16]}…`"
             )
 
 
@@ -211,6 +319,8 @@ def render_run_section() -> None:
         st.info("To enable the run button: " + "; ".join(missing) + ".")
 
     if st.button("▶ Run Local Evaluation", type="primary", disabled=not ready):
+        st.session_state.report = None
+        st.session_state.comparison = None
         cases = bound_cases(dataset.cases, max_cases)
         config = RunConfig(
             base_url=st.session_state.get("base_url_input") or DEFAULT_BASE_URL,
@@ -238,6 +348,9 @@ def render_run_section() -> None:
             st.error(f"Configuration problem: [{exc.kind}] {exc.message}")
         else:
             st.session_state.report = report
+            baseline: CloudBaseline | None = st.session_state.get("cloud_baseline")
+            if baseline is not None:
+                st.session_state.comparison = compare_run(report, baseline)
             progress.progress(1.0, text="Run finished")
             status_line.empty()
             st.divider()
@@ -292,6 +405,83 @@ def render_failures_tab() -> None:
         help=f"correct / {metrics.gold_needs_human_count} gold needs_human cases",
     )
     cols[4].metric("Critical cases passed", f"{metrics.critical_pass_count}/{metrics.critical_case_count}")
+
+    comparison: ComparisonReport | None = st.session_state.get("comparison")
+    if comparison is not None:
+        st.subheader("Cloud vs Local Comparison")
+        st.caption(
+            f"Saved baseline `{comparison.baseline_name}` · {comparison.matched_case_count}/"
+            f"{comparison.baseline_row_count} matched cases. The migration decision remains "
+            "based on local results and the existing critical rules."
+        )
+        comparison_cols = st.columns(4)
+        comparison_cols[0].metric(
+            "Exact match · local / cloud",
+            f"{comparison.local.exact_matches}/{comparison.local.total_cases} · "
+            f"{comparison.cloud.exact_matches}/{comparison.cloud.total_cases}",
+        )
+        comparison_cols[1].metric(
+            "Invalid · local / cloud",
+            f"{comparison.local.invalid_responses} · {comparison.cloud.invalid_responses}",
+        )
+        comparison_cols[2].metric(
+            "Critical misses · local / cloud",
+            f"{len(comparison.local.critical_miss_ids)} · {len(comparison.cloud.critical_miss_ids)}",
+        )
+        comparison_cols[3].metric(
+            "Avg known latency · local / cloud",
+            f"{comparison.local.average_latency_ms if comparison.local.average_latency_ms is not None else 'N/A'} · "
+            f"{comparison.cloud.average_latency_ms if comparison.cloud.average_latency_ms is not None else 'N/A'} ms",
+        )
+        st.dataframe(
+            [
+                {
+                    "metric": "exact-match",
+                    "local": f"{comparison.local.exact_matches}/{comparison.local.total_cases}",
+                    "cloud baseline": f"{comparison.cloud.exact_matches}/{comparison.cloud.total_cases}",
+                },
+                *[
+                    {
+                        "metric": f"{field} accuracy",
+                        "local": f"{comparison.local.field_correct_counts.get(field, 0)}/{comparison.local.total_cases}",
+                        "cloud baseline": f"{comparison.cloud.field_correct_counts.get(field, 0)}/{comparison.cloud.total_cases}",
+                    }
+                    for field in ("category", "priority", "needs_human", "order_id")
+                ],
+            ],
+            hide_index=True,
+            width="stretch",
+        )
+        left, right = st.columns(2)
+        with left:
+            st.markdown("**Local wrong · cloud right**")
+            st.write(", ".join(case.case_id for case in comparison.local_wrong_cloud_right) or "None")
+        with right:
+            st.markdown("**Cloud wrong · local right**")
+            st.write(", ".join(case.case_id for case in comparison.cloud_wrong_local_right) or "None")
+        with st.expander("Comparison case details"):
+            st.dataframe(
+                [
+                    {
+                        "id": case.case_id,
+                        "local": "PASS" if case.local_exact_match else ("INVALID" if case.local_invalid else "FAIL"),
+                        "cloud": "PASS" if case.cloud_exact_match else ("INVALID" if case.cloud_invalid else "FAIL"),
+                        "local field errors": ", ".join(
+                            field for field, ok in case.local_field_correct.items() if not ok
+                        ) or "none",
+                        "cloud field errors": ", ".join(
+                            field for field, ok in case.cloud_field_correct.items() if not ok
+                        ) or "none",
+                        "cloud_latency_ms": case.cloud_latency_ms,
+                        "cloud_error": case.cloud_error or "",
+                    }
+                    for case in comparison.cases
+                ],
+                hide_index=True,
+                width="stretch",
+            )
+        for warning in comparison.warnings:
+            st.caption(f"Note: {warning}")
 
     with st.expander("Field accuracy (correct / all cases, including errors)"):
         st.dataframe(
@@ -372,11 +562,11 @@ def render_failures_tab() -> None:
         )
         for pair in frontier:
             heading = {
-                "regression": "🔴 regression",
-                "both_fail": "🟠 both fail",
-                "stable_pass": "🟢 stable pass",
-                "improvement": "🔵 improvement",
-            }.get(pair.label, f"⚪ {pair.label}")
+                "regression": "regression",
+                "both_fail": "both fail",
+                "stable_pass": "stable pass",
+                "improvement": "improvement",
+            }.get(pair.label, pair.label)
             with st.container(border=True):
                 st.markdown(f"**Pair `{pair.pair_id}` — {heading}**")
                 if pair.original is not None:
@@ -409,7 +599,7 @@ def render_passport_tab() -> None:
         st.info("No run yet — the Exit Passport is generated from a finished run in the **Run** tab.")
         return
 
-    passport = build_passport(report)
+    passport = build_passport(report, st.session_state.get("comparison"))
     decision = passport["decision"]
 
     show_decision_badge(decision["status"])
@@ -480,12 +670,12 @@ def render_passport_tab() -> None:
 
 def main() -> None:
     init_state()
-    st.title("🚪 ModelExit")
-    st.caption(
-        "Know where your app can safely leave paid AI behind. A local open-weight model is "
-        "evaluated against your labelled support-ticket cases; the Exit Passport reports what "
-        "passed, what failed and what still needs human review. Synthetic fixtures are labelled; "
-        "no data leaves your machine."
+    apply_styles()
+    st.markdown('<div class="mx-kicker">LOCAL MODEL EVALUATION WORKBENCH</div>', unsafe_allow_html=True)
+    st.title("ModelExit")
+    st.markdown(
+        '<div class="mx-subtitle">Measure whether a specific local model can handle your labelled support workload before you move traffic away from a paid AI provider.</div>',
+        unsafe_allow_html=True,
     )
 
     tab_run, tab_failures, tab_passport = st.tabs(["Run", "Failures", "Passport"])

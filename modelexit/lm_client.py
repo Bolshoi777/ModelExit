@@ -10,6 +10,8 @@ Policy (AGENTS.md / ARCHITECTURE.md):
 
 from __future__ import annotations
 
+import asyncio
+import math
 import time
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -18,7 +20,7 @@ import httpx
 from pydantic import BaseModel
 
 DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1"
-LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1", "0.0.0.0"}
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 LIST_TIMEOUT_S = 8.0
 ERROR_BODY_CHARS = 300
 
@@ -67,19 +69,28 @@ class LMStudioError(Exception):
 
 
 def normalize_base_url(raw: str) -> str:
-    """Normalize and validate the endpoint; loopback only unless allowed."""
+    """Normalize a local endpoint without embedded credentials or URL secrets."""
     value = (raw or "").strip()
     if not value:
         raise LMStudioError("config", "Base URL is empty.")
     if "://" not in value:
         value = "http://" + value
     value = value.rstrip("/")
-    parsed = urlparse(value)
+    try:
+        parsed = urlparse(value)
+        hostname = parsed.hostname
+        port = parsed.port
+    except ValueError as exc:
+        raise LMStudioError("config", "Invalid local server URL or port.") from exc
     if parsed.scheme not in ("http", "https"):
         raise LMStudioError("config", f"Unsupported URL scheme: {parsed.scheme!r}")
-    if not parsed.hostname:
+    if not hostname:
         raise LMStudioError("config", "Base URL has no host name.")
-    if parsed.hostname not in LOOPBACK_HOSTS:
+    if parsed.username is not None or parsed.password is not None or parsed.query or parsed.fragment:
+        raise LMStudioError("config", "Use a local base URL without credentials, query or fragment.")
+    if port == 0:
+        raise LMStudioError("config", "Server port must be between 1 and 65535.")
+    if hostname not in LOOPBACK_HOSTS:
         raise LMStudioError(
             "config",
             f"Refusing non-loopback endpoint {parsed.hostname!r}: ModelExit only talks "
@@ -88,12 +99,29 @@ def normalize_base_url(raw: str) -> str:
     return value
 
 
+def _local_request(method: str, url: str, timeout_s: float, **kwargs: Any) -> httpx.Response:
+    """One request with a wall-clock deadline; never use environment proxies."""
+    async def send() -> httpx.Response:
+        async with asyncio.timeout(timeout_s):
+            async with httpx.AsyncClient(
+                trust_env=False, follow_redirects=False, timeout=timeout_s
+            ) as client:
+                return await client.request(method, url, **kwargs)
+
+    return asyncio.run(send())
+
+
 class LMStudioClient:
     """Small synchronous client for a local LM Studio server."""
 
     def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout_s: float = 25.0):
         self.base_url = normalize_base_url(base_url)
-        self.timeout_s = float(timeout_s)
+        try:
+            self.timeout_s = float(timeout_s)
+        except (ValueError, TypeError) as exc:
+            raise LMStudioError("config", "Timeout must be a number between 0 and 25 seconds.") from exc
+        if not math.isfinite(self.timeout_s) or not 0 < self.timeout_s <= 25:
+            raise LMStudioError("config", "Timeout must be greater than 0 and at most 25 seconds.")
 
     # -- connection / models -------------------------------------------------
 
@@ -101,14 +129,14 @@ class LMStudioClient:
         """GET /v1/models — real IDs only, nothing hardcoded."""
         url = f"{self.base_url}/models"
         try:
-            response = httpx.get(url, timeout=LIST_TIMEOUT_S)
+            response = _local_request("GET", url, LIST_TIMEOUT_S)
         except httpx.ConnectError as exc:
             raise LMStudioError(
                 "connection_refused",
                 f"Cannot reach {self.base_url}. Start LM Studio -> Developer -> "
                 f"Start Server (port 1234) and try again. Detail: {exc}",
             ) from exc
-        except httpx.TimeoutException as exc:
+        except (httpx.TimeoutException, TimeoutError) as exc:
             raise LMStudioError(
                 "timeout", f"{url} did not answer within {LIST_TIMEOUT_S:.0f}s. Detail: {exc}"
             ) from exc
@@ -118,8 +146,8 @@ class LMStudioClient:
         if response.status_code != 200:
             raise LMStudioError(
                 "http_error",
-                f"GET {url} returned HTTP {response.status_code}: "
-                f"{response.text[:ERROR_BODY_CHARS]}",
+                f"GET {url} returned HTTP {response.status_code}. "
+                "Check the server address and LM Studio server log locally.",
                 status_code=response.status_code,
             )
         try:
@@ -127,10 +155,13 @@ class LMStudioClient:
         except ValueError as exc:
             raise LMStudioError("invalid_json_response", f"Models endpoint returned non-JSON: {exc}") from exc
 
+        if not isinstance(data, dict) or not isinstance(data.get("data"), list):
+            raise LMStudioError("invalid_response", "Models endpoint must return an object with a data list.")
         models = []
-        for item in data.get("data", []) or []:
-            if isinstance(item, dict) and isinstance(item.get("id"), str):
-                models.append(ModelInfo(id=item["id"], owned_by=item.get("owned_by")))
+        for item in data["data"]:
+            if isinstance(item, dict) and isinstance(item.get("id"), str) and item["id"].strip():
+                owner = item.get("owned_by")
+                models.append(ModelInfo(id=item["id"], owned_by=owner if isinstance(owner, str) else None))
         if not models:
             raise LMStudioError(
                 "no_models",
@@ -168,21 +199,20 @@ class LMStudioClient:
             "max_tokens": max_tokens,
             "stream": False,
         }
-        timeout = httpx.Timeout(connect=5.0, read=self.timeout_s, write=10.0, pool=5.0)
         started = time.perf_counter()
         try:
-            response = httpx.post(url, json=payload, timeout=timeout)
+            response = _local_request("POST", url, self.timeout_s, json=payload)
         except httpx.ConnectError as exc:
             raise LMStudioError(
                 "connection_refused",
                 f"Cannot reach {self.base_url} (model call). Is the LM Studio server "
                 f"still running? Detail: {exc}",
             ) from exc
-        except httpx.TimeoutException as exc:
+        except (httpx.TimeoutException, TimeoutError) as exc:
             raise LMStudioError(
                 "timeout",
-                f"Model call timed out and was abandoned once (no retry): read limit "
-                f"{self.timeout_s:.0f}s, connect limit 5s. Detail: {exc.__class__.__name__}",
+                f"Model call exceeded its {self.timeout_s:g}s deadline and was abandoned "
+                "once (no retry). The local server may still be finishing generation.",
             ) from exc
         except httpx.HTTPError as exc:
             raise LMStudioError("transport_error", f"HTTP transport error: {exc}") from exc
@@ -191,8 +221,8 @@ class LMStudioClient:
         if response.status_code != 200:
             raise LMStudioError(
                 f"http_{response.status_code}",
-                f"POST {url} returned HTTP {response.status_code}: "
-                f"{response.text[:ERROR_BODY_CHARS]}",
+                f"POST {url} returned HTTP {response.status_code}. "
+                "Check that the selected model is loaded; see the LM Studio server log locally.",
                 status_code=response.status_code,
             )
         try:
@@ -200,15 +230,24 @@ class LMStudioClient:
         except ValueError as exc:
             raise LMStudioError("invalid_json_response", f"Completion response was not JSON: {exc}") from exc
 
+        if not isinstance(data, dict):
+            raise LMStudioError("invalid_response", "Completion response must be a JSON object.")
         choices = data.get("choices") or []
+        if not isinstance(choices, list):
+            raise LMStudioError("invalid_response", "Completion choices must be a list.")
         if not choices:
             raise LMStudioError("empty_response", "Completion contained no choices.")
         choice = choices[0]
+        if not isinstance(choice, dict):
+            raise LMStudioError("invalid_response", "Completion choice must be an object.")
         message = choice.get("message") or {}
+        if not isinstance(message, dict):
+            raise LMStudioError("invalid_response", "Completion message must be an object.")
         content = message.get("content")
         if isinstance(content, list):  # some servers return content parts
             content = "".join(
-                part.get("text", "") for part in content if isinstance(part, dict)
+                part["text"] for part in content
+                if isinstance(part, dict) and isinstance(part.get("text"), str)
             )
         if not isinstance(content, str) or not content.strip():
             finish_reason = choice.get("finish_reason")
@@ -226,9 +265,12 @@ class LMStudioClient:
                 f"Completion message contained no text (finish_reason={finish_reason!r}).",
             )
 
+        reported_model = data.get("model")
+        if not isinstance(reported_model, str) or not reported_model.strip():
+            raise LMStudioError("invalid_response", "Completion did not report a model id.")
         return ChatResult(
             raw_text=content,
-            model_id=str(data.get("model") or model_id),
+            model_id=reported_model,
             latency_ms=latency_ms,
             finish_reason=choice.get("finish_reason"),
             usage=data.get("usage") if isinstance(data.get("usage"), dict) else None,

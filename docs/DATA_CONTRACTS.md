@@ -7,7 +7,7 @@ Each line is an independent JSON object, e.g.:
 ```
 All fields mandatory except `pair_id` / `dimension` for user files. `id` unique, UTF-8, <=3,000 chars/ticket; no empty `text`; max 12 evaluated by default. Expected data must be independently supplied, never predicted by model.
 
-CSV input requires columns: `id`, `text`, `category`, `priority`, `needs_human`, `order_id`, optionally `pair_id`, `dimension`. Parse `needs_human` (`true/false/1/0`), empty order_id => null. Reject ambiguous booleans and unknown enums. Clear validation errors with row number.
+CSV input requires columns: `id`, `text`, `category`, `priority`, `needs_human`; `order_id`, `pair_id`, and `dimension` are optional. A missing or empty `order_id` maps to null. Parse `needs_human` (`true/false/1/0`), reject ambiguous booleans and unknown enums, and show clear validation errors with row number.
 
 ## Model output schema
 ```json
@@ -61,3 +61,12 @@ Only assign `field_correct=true` for actual valid parsed output. For any inferen
 }
 ```
 Never include secret API keys or assume a model licence. Add actual model and terms as verified by operator.
+
+## Optional saved cloud baseline
+
+The Run tab may accept a saved-response baseline for comparison; this is data import only and
+does not call a cloud provider. JSONL rows require `id` plus either `response` / `raw_response` or
+all four prediction fields. CSV requires `id` and `response`; `latency_ms` is optional. Response
+values may be a JSON object or raw JSON text. Rows are matched to the currently loaded labelled
+dataset by `id`, capped at 24, and scored against the same gold labels. Missing/extra IDs and
+unknown latency values are disclosed. Baseline results never change the local readiness decision.
