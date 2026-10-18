@@ -44,7 +44,7 @@ Evidence artifacts were exported by ModelExit itself and are committed under `do
 - Note: the frozen G2/G4 passports were exported before commit "fix: export per-case raw responses in the passport"; their JSON has no `cases[]` section. Later exports include per-case records with truncated raw outputs (≤600 chars).
 - Post-review fix pass (2026-10-18 UTC+3): failed model calls now record their measured time-to-failure as latency. New exports also state this latency definition in the Markdown passport. The frozen figures above remain the truthful output of the build that produced them.
 - Public demo link: pending (video to be recorded by the operator)
-- Public GitHub link: pending publication
+- Public GitHub link: [github.com/Bolshoi777/ModelExit](https://github.com/Bolshoi777/ModelExit) — published
 - Tests executed: core, live-model, passport and release-walkthrough checks are summarized by the exported evidence files. No test loops were used.
 
 ## Current-build judge-style UI run `de197dba9128` (2026-10-18, operator-requested)
@@ -71,9 +71,28 @@ Evidence artifacts were exported by ModelExit itself and are committed under `do
   EP05 regression; EP06 stable_pass.
 - Evidence: `docs/evidence/extended_ui_run_passport_6afe7d0265ea.json` + `.md`.
 
+## Final integration experiment `b2d608e91866` (2026-10-18)
+
+- Report: [`validation/final_experiment/FINAL_VALIDATION_REPORT.md`](../validation/final_experiment/FINAL_VALIDATION_REPORT.md)
+- Dataset: `validation/final_experiment/final_cases.jsonl`, 12 synthetic cases; SHA-256
+  `3aa79b254bb9f530e7ae387c9dccfdf67970d2d26faef5ee52f9963ef9c091f8`.
+- Model: `google/gemma-4-12b-qat` via LM Studio; 12 cases processed, 11/12 calls succeeded,
+  1 invalid response, exact match 7/12 (58%), category 9/12, priority 11/12,
+  `needs_human` 9/12, order_id 11/12.
+- Critical cases: 4/4 passed; high-priority recall 3/3; `needs_human` recall 4/4.
+- Local decision: **NEEDS REVIEW** because the invalid response makes the evidence incomplete.
+- Synthetic cloud baseline: `validation/final_experiment/synthetic_cloud_baseline.jsonl`, 12
+  matched rows; SHA-256 `53f1883e573772c9a83b1d375fa6f0b750c79a216ce1118717ef5c0ecb1c5aa0`.
+  It is controlled test data, not a real provider measurement. Cloud exact match was 7/12;
+  critical misses were `V07` and `V08`. The baseline did not influence the local decision.
+- Directional comparison: local wrong / cloud right `V05`, `V10`, `V11`; cloud wrong / local
+  right `V04`, `V07`, `V08`; both wrong `V02`, `V12`.
+- Status: **GO WITH LIMITATIONS** for the integration scenario. Both datasets and the baseline
+  are synthetic and small; this is not production-safety evidence.
+
 ## Honest commercial hypothesis
 - Buyer profile: small SaaS / indie teams paying per-ticket cloud inference who want measured evidence before moving support triage to a local model — **hypothesis only, NOT validated**.
 - Paid product or consulting service being considered: none yet; this is a contest MVP.
 - Pricing hypothesis (NOT confirmed revenue): none published.
 - Actual customer feedback: NONE — no real user or customer has tried it; all demo data is synthetic.
-- Cloud baseline availability: NONE — no provider invoice or measured cloud comparison is included; any such comparison in the product would be a user-provided estimate.
+- Cloud baseline availability: a synthetic baseline is included only in the final integration experiment above. It contains controlled responses and synthetic latency values, not provider output, an invoice, or a measured commercial benchmark. No real cloud API was called.

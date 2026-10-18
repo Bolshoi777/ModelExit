@@ -153,7 +153,9 @@ They cover dataset validation, correct/incorrect scoring, malformed JSON handlin
 ## Demo
 
 - Video: _TODO — to be recorded and linked before publication._
-- Reference run (2026-10-18): `google/gemma-4-12b-qat` via LM Studio → 6/12 exact match, 1 timeout recorded as a failure, decision **NOT READY** (critical miss S10). JSON + Markdown passports: [`docs/evidence/`](docs/evidence/); full numbers and denominators: [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
+- Reference run (2026-10-18, bundled sample): `google/gemma-4-12b-qat` via LM Studio → 6/12 exact match, 1 timeout recorded as a failure, decision **NOT READY** (critical miss S10). JSON + Markdown passports: [`docs/evidence/`](docs/evidence/).
+- [Final Integration Experiment](validation/final_experiment/FINAL_VALIDATION_REPORT.md) (2026-10-18, separate synthetic dataset): 7/12 exact match, decision **NEEDS REVIEW**, with a saved **synthetic cloud baseline** compared against the same gold labels. These are separate measured runs on different datasets; the final report contains the comparison details and limitations.
+- Full historical numbers and denominators: [`docs/RESULTS_LOG.md`](docs/RESULTS_LOG.md).
 
 ## License and credits
 
