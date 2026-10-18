@@ -92,8 +92,9 @@ def decide(metrics: Metrics, outcomes: list[CaseOutcome]) -> Decision:
     if metrics.total_cases < MIN_CASES_FOR_READY:
         invalid_note = ""
         if metrics.invalid_responses:
+            verb = "was" if metrics.invalid_responses == 1 else "were"
             invalid_note = (
-                f" {metrics.invalid_responses} of {metrics.total_cases} responses were invalid "
+                f" {metrics.invalid_responses} of {metrics.total_cases} responses {verb} invalid "
                 f"(call errors: {metrics.inference_errors}, parse errors: {metrics.parse_errors})."
             )
         reasons.append(
@@ -118,8 +119,9 @@ def decide(metrics: Metrics, outcomes: list[CaseOutcome]) -> Decision:
         return Decision(status=READY, reasons=reasons)
 
     if metrics.invalid_responses > 0:
+        verb = "was" if metrics.invalid_responses == 1 else "were"
         reasons.append(
-            f"{metrics.invalid_responses} of {metrics.total_cases} responses were missing or "
+            f"{metrics.invalid_responses} of {metrics.total_cases} responses {verb} missing or "
             f"malformed (parse errors: {metrics.parse_errors}, call errors: "
             f"{metrics.inference_errors}); results are incomplete. "
             f"Exact-match {metrics.exact_matches}/{metrics.total_cases}."

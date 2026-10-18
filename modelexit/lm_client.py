@@ -180,7 +180,9 @@ class LMStudioClient:
             ) from exc
         except httpx.TimeoutException as exc:
             raise LMStudioError(
-                "timeout", f"Model call exceeded {self.timeout_s:.0f}s and was abandoned once (no retry)."
+                "timeout",
+                f"Model call timed out and was abandoned once (no retry): read limit "
+                f"{self.timeout_s:.0f}s, connect limit 5s. Detail: {exc.__class__.__name__}",
             ) from exc
         except httpx.HTTPError as exc:
             raise LMStudioError("transport_error", f"HTTP transport error: {exc}") from exc

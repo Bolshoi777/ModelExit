@@ -18,7 +18,7 @@ class FakeLocalModel:
     def __init__(self, responses: dict[str, str]):
         self.responses = responses
 
-    def chat_classify(self, model_id, ticket_text, temperature=0.0, max_tokens=160):
+    def chat_classify(self, model_id, ticket_text, temperature=0.0, max_tokens=900):
         return ChatResult(
             raw_text=self.responses[ticket_text],
             model_id=model_id,

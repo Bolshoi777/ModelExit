@@ -8,7 +8,8 @@ Guarantees (SPEC.md acceptance criteria):
   this is failure detection, not a retry;
 - parse errors do NOT stop the run: malformed model output is part of what the
   app measures;
-- every outcome is stored, successes and failures alike.
+- every outcome is stored, successes and failures alike; a failed call records
+  its measured time-to-failure as latency (never a fake 0 ms).
 """
 
 from __future__ import annotations
@@ -93,6 +94,7 @@ def run_evaluation(
     started = time.perf_counter()
     total = len(cases)
     for index, case in enumerate(cases):
+        call_started = time.perf_counter()
         try:
             result = client.chat_classify(
                 config.model_id,
@@ -111,7 +113,7 @@ def run_evaluation(
             outcome = evaluate_case(
                 case,
                 raw_response=None,
-                latency_ms=0,
+                latency_ms=int((time.perf_counter() - call_started) * 1000),
                 model_id=config.model_id,
                 inference_error=InferenceError(kind=exc.kind, message=exc.message),
             )
@@ -123,7 +125,7 @@ def run_evaluation(
             outcome = evaluate_case(
                 case,
                 raw_response=None,
-                latency_ms=0,
+                latency_ms=int((time.perf_counter() - call_started) * 1000),
                 model_id=config.model_id,
                 inference_error=InferenceError(kind="unexpected_error", message=str(exc)),
             )

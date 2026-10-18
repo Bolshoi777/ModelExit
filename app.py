@@ -113,6 +113,12 @@ def render_connection_section() -> None:
         )
 
 
+def _clear_dataset_state() -> None:
+    """Switching the case source must not keep a stale loaded dataset."""
+    st.session_state.dataset = None
+    st.session_state.uploaded_fingerprint = None
+
+
 def render_dataset_section() -> None:
     st.subheader("2 · Evaluation cases")
     source = st.radio(
@@ -120,6 +126,7 @@ def render_dataset_section() -> None:
         ["Bundled synthetic sample", "Upload CSV / JSONL"],
         horizontal=True,
         key="dataset_source",
+        on_change=_clear_dataset_state,
     )
 
     if source == "Bundled synthetic sample":

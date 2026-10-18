@@ -82,8 +82,9 @@ def build_passport(run: RunRecord) -> dict[str, Any]:
     if run.stopped_early:
         warnings.append(run.stop_reason or "Run stopped early after consecutive inference failures.")
     if metrics.invalid_responses:
+        verb = "was" if metrics.invalid_responses == 1 else "were"
         warnings.append(
-            f"{metrics.invalid_responses} of {metrics.total_cases} responses were invalid "
+            f"{metrics.invalid_responses} of {metrics.total_cases} responses {verb} invalid "
             f"(call errors: {metrics.inference_errors}, parse errors: {metrics.parse_errors})."
         )
     if len(model_ids) > 1:
@@ -248,6 +249,11 @@ def passport_to_markdown(passport: dict[str, Any]) -> str:
         f"| Latency (total / average / max) | {metrics['latency_ms']['total']} ms / "
         f"{'N/A' if metrics['latency_ms']['average'] is None else round(metrics['latency_ms']['average'])} ms / "
         f"{metrics['latency_ms']['max']} ms |"
+    )
+    lines.append("")
+    lines.append(
+        "Latency is measured wall-clock per model call; failed calls contribute their "
+        "time-to-failure, not zero."
     )
     lines.append("")
 
